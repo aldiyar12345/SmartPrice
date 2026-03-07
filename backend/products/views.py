@@ -90,9 +90,11 @@ class ChatQueryView(APIView):
         import requests
         import os
         import json
+        from dotenv import load_dotenv
         from django.conf import settings
         from django.db.models import Min
 
+        load_dotenv(settings.BASE_DIR / ".env", override=True)
         api_key = os.getenv("OPENROUTER_API_KEY")
         if not api_key:
             return Response({"response": "ИИ временно недоступен (не настроен API ключ)."})
