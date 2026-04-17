@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Category, Product, MarketplaceOffer, Favorite, ProductFeatureScore
+from .models import Category, Product, MarketplaceOffer, Favorite, ProductFeatureScore, Feature
 
 
 class ProductFeatureScoreSerializer(serializers.ModelSerializer):
@@ -39,3 +39,16 @@ class FavoriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Favorite
         fields = ["id", "product", "product_id"]
+
+
+class FeatureSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Feature
+        fields = ["id", "name"]
+
+
+class RecommendedProductSerializer(ProductSerializer):
+    match_score = serializers.FloatField(read_only=True)
+
+    class Meta(ProductSerializer.Meta):
+        fields = ProductSerializer.Meta.fields + ["match_score"]

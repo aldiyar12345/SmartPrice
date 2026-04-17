@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { Search, Zap, Heart, Menu, X } from "lucide-react";
+import { RecommendationWidget } from "./components/RecommendationWidget";
 
 type MarketplaceOffer = {
   marketplace: string;
@@ -15,6 +16,7 @@ type Product = {
   tags: string[];
   rating: number;
   offers: MarketplaceOffer[]; // топ‑3 цены
+  match_score?: number; // балл совпадения (из API рекомендаций)
 };
 
 // Удалены жестко заданные массивы PRODUCTS и CATEGORIES
@@ -78,6 +80,7 @@ const SmartPriceLanding: React.FC = () => {
 
   const [categories, setCategories] = useState<string[]>(["Все категории"]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [recommendedProducts, setRecommendedProducts] = useState<Product[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [favoriteIds, setFavoriteIds] = useState<number[]>([]);
   const [user, setUser] = useState<{ email: string } | null>(null);
@@ -136,6 +139,7 @@ const SmartPriceLanding: React.FC = () => {
   // Загрузка товаров при изменении фильтров
   React.useEffect(() => {
     setLoading(true);
+    setRecommendedProducts(null);
     const params = new URLSearchParams();
     if (search) params.append("search", search);
     if (category !== "Все категории") params.append("category", category);
@@ -221,6 +225,12 @@ const SmartPriceLanding: React.FC = () => {
                   <span>{p.category}</span>
                   <span className="h-1 w-1 rounded-full bg-slate-600" />
                   <span>Рейтинг {Number(p.rating || 0).toFixed(1)}</span>
+                  {p.match_score !== undefined && (
+                     <>
+                       <span className="h-1 w-1 rounded-full bg-emerald-500" />
+                       <span className="text-emerald-700 font-bold bg-emerald-100 px-1.5 py-0.5 rounded-md">Балл ИИ: {p.match_score.toFixed(0)}</span>
+                     </>
+                  )}
                 </div>
               </div>
               <button
@@ -498,47 +508,65 @@ const SmartPriceLanding: React.FC = () => {
 
             {page === "catalog" && (
               <>
-                <section className="space-y-2">
-                  <h1 className="text-2xl sm:text-3xl font-semibold text-slate-50">
+                <section className="space-y-2 mb-6">
+                  <h1 className="text-2xl sm:text-3xl font-semibold text-slate-800">
                     Каталог товаров
                   </h1>
                   <p className="text-sm text-slate-500 max-w-xl">
-                    Все категории и товары в одном месте. Строка поиска и фильтры
-                    работают так же, как на главной.
+                    Все категории и товары в одном месте. Вы можете воспользоваться умным подбором от ИИ, 
+                    чтобы найти то, что идеально вам подходит!
                   </p>
                 </section>
-                <Filters
-                  search={search}
-                  setSearch={setSearch}
-                  minPrice={minPrice}
-                  setMinPrice={setMinPrice}
-                  maxPrice={maxPrice}
-                  setMaxPrice={setMaxPrice}
+                
+                <RecommendationWidget 
+                  onRecommend={(prods) => setRecommendedProducts(prods)}
+                  onClear={() => setRecommendedProducts(null)}
                 />
-                <section className="mb-4">
-                  <h2 className="text-xs uppercase tracking-wide text-slate-500 mb-2">
-                    Категории ({categories.length})
-                  </h2>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
-                    {categories.map((c) => {
-                      const isActive = c === category;
-                      return (
-                        <button
-                          key={c}
-                          type="button"
-                          onClick={() => setCategory(c)}
-                          className={`w-full text-left px-4 py-2 rounded-2xl border text-slate-900 transition ${isActive
-                            ? "bg-[var(--soft-lime-hover)] border-[#A8D89F]"
-                            : "bg-[var(--soft-lime)] border-[#C0E8A1] hover:bg-[var(--soft-lime-hover)]/80"
-                            }`}
-                        >
-                          {c}
-                        </button>
-                      );
-                    })}
+
+                {!recommendedProducts && (
+                  <>
+                    <Filters
+                      search={search}
+                      setSearch={setSearch}
+                      minPrice={minPrice}
+                      setMinPrice={setMinPrice}
+                      maxPrice={maxPrice}
+                      setMaxPrice={setMaxPrice}
+                    />
+                    <section className="mb-4">
+                      <h2 className="text-xs uppercase tracking-wide text-slate-500 mb-2">
+                        Категории ({categories.length})
+                      </h2>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
+                        {categories.map((c) => {
+                          const isActive = c === category;
+                          return (
+                            <button
+                              key={c}
+                              type="button"
+                              onClick={() => setCategory(c)}
+                              className={`w-full text-left px-4 py-2 rounded-2xl border text-slate-900 transition ${isActive
+                                ? "bg-[var(--soft-lime-hover)] border-[#A8D89F]"
+                                : "bg-[var(--soft-lime)] border-[#C0E8A1] hover:bg-[var(--soft-lime-hover)]/80"
+                                }`}
+                            >
+                              {c}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </section>
+                  </>
+                )}
+
+                {recommendedProducts && (
+                  <div className="mb-4 text-emerald-800 font-bold bg-emerald-100 border-2 border-emerald-300 p-3 rounded-xl flex items-center gap-2">
+                    <Zap className="w-5 h-5" />
+                    Топ совпадений: от самых подходящих к наименее
                   </div>
-                </section>
-                {renderProducts(displayedProducts)}
+                )}
+
+                {renderProducts(recommendedProducts || displayedProducts)}
               </>
             )}
 

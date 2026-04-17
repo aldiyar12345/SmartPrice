@@ -3,8 +3,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.db.models import Min
-from .models import Category, Product, Favorite
-from .serializers import CategorySerializer, ProductSerializer, FavoriteSerializer
+from .models import Category, Product, Favorite, Feature, ProductFeatureScore
+from .serializers import CategorySerializer, ProductSerializer, FavoriteSerializer, FeatureSerializer, RecommendedProductSerializer
 
 
 class CategoryListView(generics.ListAPIView):
@@ -156,3 +156,38 @@ class ChatQueryView(APIView):
 
         except Exception as e:
             return Response({"response": f"Проблема с подключением к ИИ."})
+
+
+class CategoryFeaturesAPIView(APIView):
+    def get(self, request, category_id):
+        features = Feature.objects.filter(category_id=category_id)
+        serializer = FeatureSerializer(features, many=True)
+        return Response(serializer.data)
+
+
+class RecommendProductsAPIView(APIView):
+    def post(self, request):
+        category_id = request.data.get("category_id")
+        weights = request.data.get("weights", {}) # e.g. {"1": 10, "2": 5} where 1 is feature_id
+        
+        if not category_id:
+            return Response({"error": "category_id required"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        products = Product.objects.filter(category_id=category_id).prefetch_related("feature_scores__feature", "offers")
+        
+        results = []
+        for product in products:
+            total_score = 0
+            for score_obj in product.feature_scores.all():
+                feature_id_str = str(score_obj.feature.id)
+                if feature_id_str in weights:
+                    weight = float(weights[feature_id_str])
+                    total_score += score_obj.score * weight
+            
+            product.match_score = total_score
+            results.append(product)
+            
+        results.sort(key=lambda x: getattr(x, 'match_score', 0), reverse=True)
+        
+        serializer = RecommendedProductSerializer(results, many=True)
+        return Response(serializer.data)
