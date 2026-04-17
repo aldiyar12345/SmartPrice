@@ -16,7 +16,7 @@ class ProductListView(generics.ListAPIView):
     serializer_class = ProductSerializer
 
     def get_queryset(self):
-        qs = Product.objects.prefetch_related("offers").select_related("category").all()
+        qs = Product.objects.prefetch_related("offers", "feature_scores__feature").select_related("category").all()
 
         # Filter by category name
         category = self.request.query_params.get("category")
@@ -45,7 +45,7 @@ class ProductListView(generics.ListAPIView):
 
 
 class ProductDetailView(generics.RetrieveAPIView):
-    queryset = Product.objects.prefetch_related("offers").select_related("category").all()
+    queryset = Product.objects.prefetch_related("offers", "feature_scores__feature").select_related("category").all()
     serializer_class = ProductSerializer
 
 
@@ -100,16 +100,18 @@ class ChatQueryView(APIView):
             return Response({"response": "ИИ временно недоступен (не настроен API ключ)."})
 
         # 1. Собираем контекст из базы данных
-        products = Product.objects.prefetch_related("offers").select_related("category").all()
+        products = Product.objects.prefetch_related("offers", "feature_scores__feature").select_related("category").all()
         
         context_data = []
         for p in products:
             best_offer = p.offers.order_by("price").first()
+            features_text = ", ".join([f"{fs.feature.name}: {fs.score}/100" for fs in p.feature_scores.all()])
+            feature_suffix = f" Characteristics: {features_text}" if features_text else ""
             if best_offer:
                 price_str = f"{best_offer.price:,}".replace(",", " ")
-                context_data.append(f"- {p.name} ({p.category.name}): {price_str} ₸ в {best_offer.marketplace}")
+                context_data.append(f"- {p.name} ({p.category.name}): {price_str} ₸ в {best_offer.marketplace}.{feature_suffix}")
             else:
-                context_data.append(f"- {p.name} ({p.category.name}): Нет предложений")
+                context_data.append(f"- {p.name} ({p.category.name}): Нет предложений.{feature_suffix}")
 
         knowledge_base = "\n".join(context_data)
 
