@@ -1,5 +1,13 @@
 from rest_framework import serializers
-from .models import Category, Product, MarketplaceOffer, Favorite
+from .models import Category, Product, MarketplaceOffer, Favorite, ProductFeatureScore
+
+
+class ProductFeatureScoreSerializer(serializers.ModelSerializer):
+    feature_name = serializers.CharField(source='feature.name', read_only=True)
+
+    class Meta:
+        model = ProductFeatureScore
+        fields = ["feature_name", "score"]
 
 
 class MarketplaceOfferSerializer(serializers.ModelSerializer):
@@ -11,10 +19,11 @@ class MarketplaceOfferSerializer(serializers.ModelSerializer):
 class ProductSerializer(serializers.ModelSerializer):
     offers = MarketplaceOfferSerializer(many=True, read_only=True)
     category = serializers.StringRelatedField()
+    feature_scores = ProductFeatureScoreSerializer(many=True, read_only=True)
 
     class Meta:
         model = Product
-        fields = ["id", "name", "category", "tags", "rating", "offers"]
+        fields = ["id", "name", "category", "tags", "rating", "offers", "feature_scores"]
 
 
 class CategorySerializer(serializers.ModelSerializer):

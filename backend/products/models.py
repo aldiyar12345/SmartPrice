@@ -44,3 +44,26 @@ class Favorite(models.Model):
 
     def __str__(self):
         return f"{self.user.username} ❤ {self.product.name}"
+
+
+class Feature(models.Model):
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="features")
+    name = models.CharField(max_length=150)
+
+    class Meta:
+        unique_together = ("category", "name")
+
+    def __str__(self):
+        return f"{self.category.name} - {self.name}"
+
+
+class ProductFeatureScore(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="feature_scores")
+    feature = models.ForeignKey(Feature, on_delete=models.CASCADE)
+    score = models.IntegerField()
+
+    class Meta:
+        unique_together = ("product", "feature")
+
+    def __str__(self):
+        return f"{self.product.name} - {self.feature.name}: {self.score}"
