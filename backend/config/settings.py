@@ -22,6 +22,7 @@ INSTALLED_APPS = [
     # Third-party
     "rest_framework",
     "corsheaders",
+    "drf_spectacular",
     # Local
     "products",
     "accounts",
@@ -92,6 +93,14 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.AllowAny",
     ],
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "SmartPrice API",
+    "DESCRIPTION": "API documentation for SmartPrice project",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
 }
 
 # ── CORS ───────────────────────────────────────────────────────────────────────
@@ -108,3 +117,5 @@ SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(days=7),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=30),
 }
+import sentry_sdk
+sentry_sdk.init(dsn='https://placeholder@o0.ingest.sentry.io/0', traces_sample_rate=1.0, profiles_sample_rate=1.0)

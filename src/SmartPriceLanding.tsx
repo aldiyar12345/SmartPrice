@@ -67,11 +67,12 @@ const Filters = React.memo<FiltersProps>(
 
 
 
-type Page = "home" | "catalog" | "favorites" | "profile";
+type Page = "home" | "catalog" | "favorites" | "profile" | "admin";
 
 const SmartPriceLanding: React.FC = () => {
   const [page, setPage] = useState<Page>("home");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [metrics, setMetrics] = useState<{ users: number; products: number; categories: number; features: number } | null>(null);
 
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<string>("Все категории");
@@ -85,11 +86,42 @@ const SmartPriceLanding: React.FC = () => {
   const [favoriteIds, setFavoriteIds] = useState<number[]>([]);
   const [user, setUser] = useState<{ email: string } | null>(null);
 
+  // Auth states
+  const [authMode, setAuthMode] = useState<"login" | "register">("login");
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
   const [pendingPass, setPendingPass] = useState<string | null>(null);
   const [sentCode, setSentCode] = useState<string | null>(null);
   const [codeInput, setCodeInput] = useState("");
   const [submissionId, setSubmissionId] = useState<number | null>(null);
+  const [termsModalOpen, setTermsModalOpen] = useState(false);
+  const [privacyModalOpen, setPrivacyModalOpen] = useState(false);
+
+  // Security states
+  const [codeAttempts, setCodeAttempts] = useState(0);
+  const [showCaptcha, setShowCaptcha] = useState(false);
+  const [captchaVerified, setCaptchaVerified] = useState(false);
+  const [loginAttempts, setLoginAttempts] = useState(0);
+  const [banEndTime, setBanEndTime] = useState<number | null>(null);
+  const [remainingBanTime, setRemainingBanTime] = useState(0);
+
+  // Timer for ban
+  React.useEffect(() => {
+    if (!banEndTime) {
+      setRemainingBanTime(0);
+      return;
+    }
+    const interval = setInterval(() => {
+      const now = Date.now();
+      if (now >= banEndTime) {
+        setBanEndTime(null);
+        setRemainingBanTime(0);
+        setLoginAttempts(0); // reset attempts after ban
+      } else {
+        setRemainingBanTime(Math.ceil((banEndTime - now) / 1000));
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [banEndTime]);
 
   // AI Chat states
   const [chatOpen, setChatOpen] = useState(false);
@@ -164,6 +196,16 @@ const SmartPriceLanding: React.FC = () => {
       });
   }, [search, category, minPrice, maxPrice, page, favoriteIds]);
 
+  // Загрузка метрик для админ-панели
+  React.useEffect(() => {
+    if (page === "admin") {
+      fetch("/api/auth/metrics/")
+        .then(res => res.json())
+        .then(data => setMetrics(data))
+        .catch(err => console.error("Error fetching metrics:", err));
+    }
+  }, [page]);
+
   // читаем сохранённого пользователя из localStorage при загрузке
   React.useEffect(() => {
     const stored = localStorage.getItem("sp_user");
@@ -186,6 +228,9 @@ const SmartPriceLanding: React.FC = () => {
       setPendingPass(null);
       setSubmissionId(null);
       setCodeInput("");
+      setCodeAttempts(0);
+      setShowCaptcha(false);
+      setCaptchaVerified(false);
     }
   };
 
@@ -405,6 +450,21 @@ const SmartPriceLanding: React.FC = () => {
               >
                 {user ? user.email : "Профиль"}
               </button>
+              {user?.email === "admin@admin.com" && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPage("admin");
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                  className={`px-4 py-2 rounded-xl border-2 text-sm font-medium transition ${page === "admin"
+                    ? "border-emerald-600 bg-emerald-600 text-white shadow-[0_0_22px_rgba(16,185,129,0.7)]"
+                    : "border-slate-300 bg-white text-slate-800 hover:bg-emerald-50 hover:text-emerald-900"
+                    }`}
+                >
+                  Админ-Панель
+                </button>
+              )}
             </nav>
 
             <button
@@ -472,6 +532,19 @@ const SmartPriceLanding: React.FC = () => {
                 >
                   {user ? user.email : "Профиль"}
                 </button>
+                {user?.email === "admin@admin.com" && (
+                  <button
+                    type="button"
+                    className="px-4 py-2 rounded-xl border-2 border-slate-300 bg-white text-left text-sm font-medium text-slate-800 hover:bg-emerald-50 hover:text-emerald-900 transition"
+                    onClick={() => {
+                      setPage("admin");
+                      setMenuOpen(false);
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }}
+                  >
+                    Админ-Панель
+                  </button>
+                )}
               </div>
             </div>
           )}
@@ -598,94 +671,229 @@ const SmartPriceLanding: React.FC = () => {
                 {!user ? (
                   !sentCode ? (
                     <>
-                      <h2 className="text-xl font-semibold mb-4">Войти или зарегистрироваться</h2>
-                      <form
-                        onSubmit={async (e) => {
-                          e.preventDefault();
-                          const form = e.target as HTMLFormElement;
-                          const email = (form.elements.namedItem("email") as HTMLInputElement).value;
-                          const password = (form.elements.namedItem("password") as HTMLInputElement).value;
-
-                          try {
-                            const response = await fetch("/api/auth/submit/", {
-                              method: "POST",
-                              headers: { "Content-Type": "application/json" },
-                              body: JSON.stringify({ email, password }),
-                            });
-
-                            if (response.ok) {
-                              const data = await response.json();
-                              setSubmissionId(data.id);
-                              setSentCode(data.code);
-                              setPendingEmail(email);
-                              alert(`Код подтверждения: ${data.code}`);
-                            } else {
-                              const err = await response.json();
-                              alert(err.error || "Ошибка при отправке данных");
-                            }
-                          } catch (error) {
-                            alert("Не удалось связаться с сервером. Убедитесь, что backend запущен.");
-                          }
-                        }}
-                      >
-                        <div className="mb-3">
-                          <label className="block text-sm font-medium mb-1" htmlFor="email">
-                            Email
-                          </label>
-                          <input
-                            id="email"
-                            name="email"
-                            type="email"
-                            required
-                            className="w-full border-2 border-slate-300 rounded-xl px-3 py-2 outline-none focus:border-[var(--soft-lime)] focus:ring-1 focus:ring-[var(--soft-lime-hover)]/70"
-                            placeholder="you@example.com"
-                          />
-                        </div>
-                        <div className="mb-4">
-                          <label className="block text-sm font-medium mb-1" htmlFor="password">
-                            Пароль
-                          </label>
-                          <input
-                            id="password"
-                            name="password"
-                            type="password"
-                            required
-                            className="w-full border-2 border-slate-300 rounded-xl px-3 py-2 outline-none focus:border-[var(--soft-lime)] focus:ring-1 focus:ring-[var(--soft-lime-hover)]/70"
-                          />
-                        </div>
-                        <button
-                          type="submit"
-                          className="w-full py-2 rounded-xl bg-[var(--soft-lime)] text-slate-900 font-semibold hover:bg-[var(--soft-lime-hover)] transition"
+                      <div className="flex bg-slate-100 p-1 rounded-xl mb-6">
+                        <button 
+                          className={`flex-1 py-2 text-sm font-semibold rounded-lg transition ${authMode === "login" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+                          onClick={() => setAuthMode("login")}
                         >
-                          Войти / Зарегистрироваться
+                          Вход
                         </button>
-                      </form>
-                      <p className="text-xs text-slate-500 mt-3">
-                        Введите почту и пароль в поля выше и нажмите кнопку. В коде
-                        обработчик формы (onSubmit) читает эти значения, смотрите
-                        комментарии.
-                      </p>
+                        <button 
+                          className={`flex-1 py-2 text-sm font-semibold rounded-lg transition ${authMode === "register" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+                          onClick={() => setAuthMode("register")}
+                        >
+                          Регистрация
+                        </button>
+                      </div>
+
+                      {authMode === "login" ? (
+                        <form
+                          onSubmit={async (e) => {
+                            e.preventDefault();
+                            if (banEndTime) return; // Prevent submit if banned
+                            
+                            const form = e.target as HTMLFormElement;
+                            const email = (form.elements.namedItem("email") as HTMLInputElement).value;
+                            const password = (form.elements.namedItem("password") as HTMLInputElement).value;
+
+                            try {
+                              const response = await fetch("/api/auth/login/", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ email, password }),
+                              });
+
+                              if (response.ok) {
+                                const data = await response.json();
+                                saveUser(data.user);
+                                setLoginAttempts(0);
+                              } else {
+                                const err = await response.json();
+                                const newAttempts = loginAttempts + 1;
+                                setLoginAttempts(newAttempts);
+                                
+                                if (newAttempts >= 5) {
+                                  setBanEndTime(Date.now() + 60000); // 1 minute ban
+                                  alert("Слишком много неудачных попыток. Подождите 1 минуту.");
+                                } else {
+                                  alert(err.error || "Неправильный email или пароль");
+                                }
+                              }
+                            } catch (error) {
+                              alert("Не удалось связаться с сервером.");
+                            }
+                          }}
+                        >
+                          <div className="mb-3">
+                            <label className="block text-sm font-medium mb-1" htmlFor="email">
+                              Email
+                            </label>
+                            <input
+                              id="email"
+                              name="email"
+                              type="email"
+                              required
+                              disabled={banEndTime !== null}
+                              className="w-full border-2 border-slate-300 rounded-xl px-3 py-2 outline-none focus:border-[var(--soft-lime)] focus:ring-1 disabled:opacity-50"
+                              placeholder="you@example.com"
+                            />
+                          </div>
+                          <div className="mb-4">
+                            <label className="block text-sm font-medium mb-1" htmlFor="password">
+                              Пароль
+                            </label>
+                            <input
+                              id="password"
+                              name="password"
+                              type="password"
+                              required
+                              disabled={banEndTime !== null}
+                              className="w-full border-2 border-slate-300 rounded-xl px-3 py-2 outline-none focus:border-[var(--soft-lime)] focus:ring-1 disabled:opacity-50"
+                            />
+                          </div>
+                          <button
+                            type="submit"
+                            disabled={banEndTime !== null}
+                            className="w-full py-2 rounded-xl bg-[var(--soft-lime)] text-slate-900 font-semibold hover:bg-[var(--soft-lime-hover)] transition disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {banEndTime ? `Подождите ${remainingBanTime} сек.` : "Войти"}
+                          </button>
+                        </form>
+                      ) : (
+                        <form
+                          onSubmit={async (e) => {
+                            e.preventDefault();
+                            const form = e.target as HTMLFormElement;
+                            const email = (form.elements.namedItem("email") as HTMLInputElement).value;
+                            const password = (form.elements.namedItem("password") as HTMLInputElement).value;
+
+                            try {
+                              const response = await fetch("/api/auth/submit/", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ email, password }),
+                              });
+
+                              if (response.ok) {
+                                const data = await response.json();
+                                setSubmissionId(data.id);
+                                setSentCode(data.code);
+                                setPendingEmail(email);
+                                setCodeAttempts(0);
+                                setShowCaptcha(false);
+                                setCaptchaVerified(false);
+                                alert(`Код подтверждения (DEV): ${data.code}`);
+                              } else {
+                                const err = await response.json();
+                                alert(err.error || "Ошибка при отправке данных");
+                              }
+                            } catch (error) {
+                              alert("Не удалось связаться с сервером.");
+                            }
+                          }}
+                        >
+                          <div className="mb-3">
+                            <label className="block text-sm font-medium mb-1" htmlFor="email">
+                              Email
+                            </label>
+                            <input
+                              id="email"
+                              name="email"
+                              type="email"
+                              required
+                              className="w-full border-2 border-slate-300 rounded-xl px-3 py-2 outline-none focus:border-[var(--soft-lime)] focus:ring-1"
+                              placeholder="you@example.com"
+                            />
+                          </div>
+                          <div className="mb-4">
+                            <label className="block text-sm font-medium mb-1" htmlFor="password">
+                              Пароль
+                            </label>
+                            <input
+                              id="password"
+                              name="password"
+                              type="password"
+                              required
+                              className="w-full border-2 border-slate-300 rounded-xl px-3 py-2 outline-none focus:border-[var(--soft-lime)] focus:ring-1"
+                            />
+                          </div>
+                          <div className="mb-4 flex items-start gap-2">
+                            <input
+                              id="terms"
+                              name="terms"
+                              type="checkbox"
+                              required
+                              className="mt-1 flex-shrink-0 w-4 h-4 text-[var(--soft-lime)] border-slate-300 rounded focus:ring-[var(--soft-lime)]"
+                            />
+                            <label htmlFor="terms" className="text-xs text-slate-600">
+                              Я принимаю условия <button type="button" onClick={() => setTermsModalOpen(true)} className="text-emerald-600 hover:underline">договора оферты</button>.
+                            </label>
+                          </div>
+                          <div className="mb-4 flex items-start gap-2">
+                            <input
+                              id="privacy"
+                              name="privacy"
+                              type="checkbox"
+                              required
+                              className="mt-1 flex-shrink-0 w-4 h-4 text-[var(--soft-lime)] border-slate-300 rounded focus:ring-[var(--soft-lime)]"
+                            />
+                            <label htmlFor="privacy" className="text-xs text-slate-600">
+                              Я согласен на <button type="button" onClick={() => setPrivacyModalOpen(true)} className="text-emerald-600 hover:underline">обработку персональных данных</button>.
+                            </label>
+                          </div>
+                          <button
+                            type="submit"
+                            className="w-full py-2 rounded-xl bg-[var(--soft-lime)] text-slate-900 font-semibold hover:bg-[var(--soft-lime-hover)] transition"
+                          >
+                            Зарегистрироваться
+                          </button>
+                        </form>
+                      )}
                     </>
                   ) : (
-                    /* отображаем поле ввода 6‑значного кода */
                     <>
-                      <h2 className="text-xl font-semibold mb-4">Проверка кода</h2>
+                      <h2 className="text-xl font-semibold mb-4">Подтверждение почты</h2>
                       <p className="text-sm text-slate-500 mb-4">
-                        Код выслан в терминал. Введите его здесь:
+                        Мы отправили код на {pendingEmail}. Введите его ниже:
                       </p>
                       <div className="mb-3">
                         <input
                           value={codeInput}
                           onChange={(e) => setCodeInput(e.target.value)}
-                          className="w-full border-2 border-slate-300 rounded-xl px-3 py-2 outline-none focus:border-[var(--soft-lime)] focus:ring-1 focus:ring-[var(--soft-lime-hover)]/70"
-                          placeholder="123456"
+                          className="w-full text-center tracking-widest text-lg border-2 border-slate-300 rounded-xl px-3 py-2 outline-none focus:border-[var(--soft-lime)] focus:ring-1"
+                          placeholder="------"
+                          maxLength={6}
                         />
                       </div>
+                      
+                      {showCaptcha && (
+                        <div className="mb-4 p-3 border-2 border-slate-200 rounded-xl flex items-center gap-3 bg-slate-50">
+                          <input 
+                            type="checkbox" 
+                            id="captcha" 
+                            checked={captchaVerified}
+                            onChange={(e) => {
+                              setCaptchaVerified(e.target.checked);
+                              if (e.target.checked) {
+                                setShowCaptcha(false);
+                                setCodeAttempts(0);
+                              }
+                            }}
+                            className="w-5 h-5 text-emerald-500 rounded focus:ring-emerald-500" 
+                          />
+                          <label htmlFor="captcha" className="text-sm font-medium text-slate-700 cursor-pointer flex-1">
+                            Я не робот
+                          </label>
+                          <img src="https://upload.wikimedia.org/wikipedia/commons/a/ad/RecaptchaLogo.svg" alt="captcha" className="h-6 opacity-60" />
+                        </div>
+                      )}
+
                       <button
                         type="button"
-                        className="w-full py-2 rounded-xl bg-[var(--soft-lime)] text-slate-900 font-semibold hover:bg-[var(--soft-lime-hover)] transition"
+                        disabled={showCaptcha && !captchaVerified}
+                        className="w-full py-2 rounded-xl bg-[var(--soft-lime)] text-slate-900 font-semibold hover:bg-[var(--soft-lime-hover)] transition disabled:opacity-50 disabled:cursor-not-allowed"
                         onClick={async () => {
-                          if (!submissionId) return;
+                          if (!submissionId || (showCaptcha && !captchaVerified)) return;
 
                           try {
                             const response = await fetch("/api/auth/verify/", {
@@ -695,14 +903,20 @@ const SmartPriceLanding: React.FC = () => {
                             });
 
                             if (response.ok) {
-                              saveUser({ email: pendingEmail! });
-                              setSentCode(null);
-                              setPendingEmail(null);
-                              setSubmissionId(null);
-                              setCodeInput("");
+                              const data = await response.json();
+                              saveUser(data.user || { email: pendingEmail! });
                             } else {
                               const err = await response.json();
-                              alert(err.error || "Неверный код, попробуйте ещё раз");
+                              const newAttempts = codeAttempts + 1;
+                              setCodeAttempts(newAttempts);
+                              
+                              if (newAttempts >= 3) {
+                                setShowCaptcha(true);
+                                setCaptchaVerified(false);
+                                alert("Слишком много неудачных попыток. Пройдите проверку.");
+                              } else {
+                                alert(err.error || "Неверный код, попробуйте ещё раз");
+                              }
                             }
                           } catch (error) {
                             alert("Ошибка верификации");
@@ -711,10 +925,17 @@ const SmartPriceLanding: React.FC = () => {
                       >
                         Подтвердить
                       </button>
-                      <p className="text-xs text-slate-500 mt-3">
-                        Этот код выводится в консоль (в терминал сборщика). Поищите
-                        сообщение "verification code".
-                      </p>
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          setSentCode(null);
+                          setCodeAttempts(0);
+                          setShowCaptcha(false);
+                        }}
+                        className="w-full mt-2 py-2 text-sm text-slate-500 hover:text-slate-700"
+                      >
+                        Назад
+                      </button>
                     </>
                   )
                 ) : (
@@ -734,6 +955,68 @@ const SmartPriceLanding: React.FC = () => {
                       <h3 className="font-medium mb-2">Корзина (пока пусто)</h3>
                     </div>
                   </>
+                )}
+              </section>
+            )}
+
+            {page === "admin" && user?.email === "admin@admin.com" && (
+              <section className="space-y-6">
+                <div className="space-y-2 mb-6">
+                  <h1 className="text-2xl sm:text-3xl font-semibold text-slate-800">
+                    Дашборд Метрик
+                  </h1>
+                  <p className="text-sm text-slate-500 max-w-xl">
+                    Статистика платформы в реальном времени. Вся аналитика как на ладони.
+                  </p>
+                </div>
+                
+                {metrics ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="bg-white border-2 border-emerald-500 rounded-2xl p-6 shadow-sm flex flex-col items-center justify-center relative overflow-hidden group hover:border-emerald-600 transition">
+                      <div className="absolute inset-0 bg-emerald-50 opacity-0 group-hover:opacity-100 transition duration-300" />
+                      <div className="relative z-10 text-4xl font-bold text-slate-900 mb-1">{metrics.users}</div>
+                      <div className="relative z-10 text-xs font-semibold uppercase tracking-wide text-emerald-700">Пользователей</div>
+                    </div>
+                    <div className="bg-white border-2 border-violet-500 rounded-2xl p-6 shadow-sm flex flex-col items-center justify-center relative overflow-hidden group hover:border-violet-600 transition">
+                      <div className="absolute inset-0 bg-violet-50 opacity-0 group-hover:opacity-100 transition duration-300" />
+                      <div className="relative z-10 text-4xl font-bold text-slate-900 mb-1">{metrics.products}</div>
+                      <div className="relative z-10 text-xs font-semibold uppercase tracking-wide text-violet-700">Товаров</div>
+                    </div>
+                    <div className="bg-white border-2 border-amber-500 rounded-2xl p-6 shadow-sm flex flex-col items-center justify-center relative overflow-hidden group hover:border-amber-600 transition">
+                      <div className="absolute inset-0 bg-amber-50 opacity-0 group-hover:opacity-100 transition duration-300" />
+                      <div className="relative z-10 text-4xl font-bold text-slate-900 mb-1">{metrics.categories}</div>
+                      <div className="relative z-10 text-xs font-semibold uppercase tracking-wide text-amber-700">Категорий</div>
+                    </div>
+                    <div className="bg-white border-2 border-blue-500 rounded-2xl p-6 shadow-sm flex flex-col items-center justify-center relative overflow-hidden group hover:border-blue-600 transition">
+                      <div className="absolute inset-0 bg-blue-50 opacity-0 group-hover:opacity-100 transition duration-300" />
+                      <div className="relative z-10 text-4xl font-bold text-slate-900 mb-1">{metrics.features}</div>
+                      <div className="relative z-10 text-xs font-semibold uppercase tracking-wide text-blue-700">Факторов (AI)</div>
+                    </div>
+                    <div className="bg-white border-2 border-rose-500 rounded-2xl p-6 shadow-sm flex flex-col items-center justify-center relative overflow-hidden group hover:border-rose-600 transition">
+                      <div className="absolute inset-0 bg-rose-50 opacity-0 group-hover:opacity-100 transition duration-300" />
+                      <div className="relative z-10 text-4xl font-bold text-slate-900 mb-1">{metrics.registrations || 0}</div>
+                      <div className="relative z-10 text-xs font-semibold uppercase tracking-wide text-rose-700">Попыток рег-ии</div>
+                    </div>
+                    <div className="bg-white border-2 border-indigo-500 rounded-2xl p-6 shadow-sm flex flex-col items-center justify-center relative overflow-hidden group hover:border-indigo-600 transition">
+                      <div className="absolute inset-0 bg-indigo-50 opacity-0 group-hover:opacity-100 transition duration-300" />
+                      <div className="relative z-10 text-4xl font-bold text-slate-900 mb-1">{metrics.conversion_rate || "0%"}</div>
+                      <div className="relative z-10 text-xs font-semibold uppercase tracking-wide text-indigo-700">Конверсия (CR)</div>
+                    </div>
+                    <div className="bg-white border-2 border-cyan-500 rounded-2xl p-6 shadow-sm flex flex-col items-center justify-center relative overflow-hidden group hover:border-cyan-600 transition">
+                      <div className="absolute inset-0 bg-cyan-50 opacity-0 group-hover:opacity-100 transition duration-300" />
+                      <div className="relative z-10 text-4xl font-bold text-slate-900 mb-1">{metrics.active_sessions || 0}</div>
+                      <div className="relative z-10 text-xs font-semibold uppercase tracking-wide text-cyan-700">Активных сессий</div>
+                    </div>
+                    <div className="bg-white border-2 border-red-500 rounded-2xl p-6 shadow-sm flex flex-col items-center justify-center relative overflow-hidden group hover:border-red-600 transition">
+                      <div className="absolute inset-0 bg-red-50 opacity-0 group-hover:opacity-100 transition duration-300" />
+                      <div className="relative z-10 text-4xl font-bold text-slate-900 mb-1">{metrics.errors_today || 0}</div>
+                      <div className="relative z-10 text-xs font-semibold uppercase tracking-wide text-red-700">Ошибок за 24ч</div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center p-12 text-slate-500 border-2 border-dashed rounded-2xl">
+                    Загрузка метрик...
+                  </div>
                 )}
               </section>
             )}
@@ -832,6 +1115,66 @@ const SmartPriceLanding: React.FC = () => {
             )}
           </button>
         </div>
+
+        {/* Terms Modal overlay */}
+        {termsModalOpen && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+            <div className="bg-white rounded-3xl w-full max-w-2xl max-h-[80vh] flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+              <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-emerald-50">
+                <h3 className="text-xl font-semibold text-slate-800">Пользовательское соглашение</h3>
+                <button type="button" onClick={() => setTermsModalOpen(false)} className="p-2 bg-white rounded-xl hover:bg-slate-100 transition">
+                  <X className="w-5 h-5 text-slate-500" />
+                </button>
+              </div>
+              <div className="p-6 overflow-y-auto flex-1 text-sm text-slate-600 space-y-4">
+                <p><strong>1. Общие положения</strong><br/>Настоящее Пользовательское соглашение является публичной офертой. Оно регулирует условия использования сервиса <strong>SmartPrice</strong>. Регистрируясь на сайте или продолжая его использование, вы безоговорочно принимаете условия настоящего соглашения.</p>
+                <p><strong>2. Предмет соглашения</strong><br/>SmartPrice предоставляет информационный сервис поиска и оценки цен на товары с различных маркетплейсов (Sulpak, Technodom, Kaspi, Ozon, Wildberries и др.). Мы не являемся продавцом и не совершаем прямых продаж. Заказ, оплата и доставка осуществляются на стороне партнеров-маркетплейсов.</p>
+                <p><strong>3. Права и обязанности сторон</strong><br/>Пользователь обязуется использовать сервис только в законных целях. Администрация сервиса обязуется обеспечить работу сайта, но не несет ответственности за временные перебои в работе, а также за цены, наличие и качество товаров на сторонних площадках, так как они могут меняться динамически.</p>
+                <p><strong>4. Обработка персональных данных</strong><br/>Соглашаясь с настоящими условиями, вы даете свое полное согласие на сбор, хранение и обработку ваших персональных данных (таких как email и данные о предпочтениях). Мы используем ваши данные исключительно для авторизации, персонализации платформы и улучшения алгоритмов рекомендаций (SmartPrice AI). Ваши данные надежно защищены.</p>
+                <p><strong>5. Ограничение ответственности</strong><br/>Сервис SmartPrice предоставляется "как есть". Все рейтинги, "баллы совпадения ИИ" и алгоритмы подбора носят рекомендательный характер. Окончательное решение о покупке принимает Пользователь.</p>
+              </div>
+              <div className="p-5 border-t border-slate-100 bg-slate-50 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setTermsModalOpen(false)}
+                  className="px-6 py-2 bg-emerald-600 text-white font-medium rounded-xl hover:bg-emerald-700 transition"
+                >
+                  Понятно
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Privacy Policy Modal overlay */}
+        {privacyModalOpen && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+            <div className="bg-white rounded-3xl w-full max-w-2xl max-h-[80vh] flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+              <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-emerald-50">
+                <h3 className="text-xl font-semibold text-slate-800">Политика конфиденциальности</h3>
+                <button type="button" onClick={() => setPrivacyModalOpen(false)} className="p-2 bg-white rounded-xl hover:bg-slate-100 transition">
+                  <X className="w-5 h-5 text-slate-500" />
+                </button>
+              </div>
+              <div className="p-6 overflow-y-auto flex-1 text-sm text-slate-600 space-y-4">
+                <p><strong>1. Общие положения</strong><br/>Настоящая Политика конфиденциальности разработана в соответствии с Законом Республики Казахстан «О персональных данных и их защите». Она определяет порядок обработки персональных данных и меры по обеспечению безопасности персональных данных в сервисе <strong>SmartPrice</strong>.</p>
+                <p><strong>2. Сбор и использование данных</strong><br/>Мы собираем минимально необходимый объем данных: ваш адрес электронной почты и историю поисковых запросов/избранных товаров. Эти данные используются для обеспечения работы вашего личного кабинета, отправки кодов верификации и улучшения алгоритмов рекомендаций (SmartPrice AI).</p>
+                <p><strong>3. Защита данных</strong><br/>SmartPrice принимает все необходимые правовые, организационные и технические меры для защиты персональных данных от неправомерного или случайного доступа, уничтожения, изменения, блокирования, копирования, предоставления, распространения, а также от иных неправомерных действий в отношении персональных данных.</p>
+                <p><strong>4. Передача третьим лицам</strong><br/>Мы не передаем ваши персональные данные третьим лицам, за исключением случаев, прямо предусмотренных законодательством Республики Казахстан.</p>
+                <p><strong>5. Ваши права</strong><br/>Вы имеете право в любой момент запросить удаление вашего аккаунта и связанных с ним персональных данных, обратившись в службу поддержки сервиса.</p>
+              </div>
+              <div className="p-5 border-t border-slate-100 bg-slate-50 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setPrivacyModalOpen(false)}
+                  className="px-6 py-2 bg-emerald-600 text-white font-medium rounded-xl hover:bg-emerald-700 transition"
+                >
+                  Понятно
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </>
   );

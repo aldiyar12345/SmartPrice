@@ -105,8 +105,8 @@ class ChatQueryView(APIView):
         context_data = []
         for p in products:
             best_offer = p.offers.order_by("price").first()
-            features_text = ", ".join([f"{fs.feature.name}: {fs.score}/100" for fs in p.feature_scores.all()])
-            feature_suffix = f" Characteristics: {features_text}" if features_text else ""
+            features_text = ", ".join([f"{fs.feature.name}: {fs.score}/10" for fs in p.feature_scores.all()])
+            feature_suffix = f" Характеристики: {features_text}" if features_text else ""
             if best_offer:
                 price_str = f"{best_offer.price:,}".replace(",", " ")
                 context_data.append(f"- {p.name} ({p.category.name}): {price_str} ₸ в {best_offer.marketplace}.{feature_suffix}")
@@ -118,22 +118,23 @@ class ChatQueryView(APIView):
         # 2. Формируем запрос к OpenRouter
         system_prompt = (
             "Ты — ИИ-ассистент сайта SmartPrice. "
-            "Твоя задача — помогать пользователям находить лучшие предложения на основе данных из базы. "
+            "Твоя задача — помогать пользователям находить лучшие товары и цены на основе данных из базы. "
             "Правила:\n"
-            "1. Используй ТОЛЬКО предоставленные данные о ценах и магазинах.\n"
-            "2. Если просят 'самый дешевый', найди минимальную цену в списке.\n"
+            "1. Используй ТОЛЬКО предоставленные данные о товарах, характеристиках и ценах.\n"
+            "2. Учитывай данные характеристик (они оцениваются от 1 до 10, где 10 — самое лучшее).\n"
             "3. Если товара нет в списке, вежливо скажи об этом.\n"
-            "4. Отвечай кратко, дружелюбно и на русском языке.\n\n"
-            "Список товаров:\n" + knowledge_base
+            "4. Отвечай кратко, профессионально и дружелюбно на русском языке.\n\n"
+            "Список товаров и актуальных данных:\n" + knowledge_base
         )
 
         try:
             payload = {
-                "model": "openrouter/free",
+                "model": "google/gemini-2.5-flash",
                 "messages": [
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": message}
-                ]
+                ],
+                "max_tokens": 1000
             }
             
             response = requests.post(

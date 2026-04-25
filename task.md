@@ -1,0 +1,5 @@
+- `[x]` Create `AdminMetricsView` in backend/accounts
+- `[x]` Install `drf-spectacular` and configure Swagger in backend
+- `[x]` Write tests for products and accounts
+- `[x]` Update README with test instructions
+- `[x]` Update `SmartPriceLanding.tsx` to include Admin Dashboard (only for admin@admin.com)
