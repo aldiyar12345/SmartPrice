@@ -26,12 +26,11 @@ class ProductTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_recommendations(self):
-        response = self.client.post("/api/recommendations/", {"category": "Тестовая Категория", "preferences": {"Цена": 10}})
-        # Usually returns 200 if category exists, even with no features defined
+        response = self.client.post("/api/recommend/", {"category_id": self.category.id, "weights": {}}, content_type="application/json")
         self.assertEqual(response.status_code, 200)
-        self.assertIn("recommended_products", response.json())
+        self.assertTrue(isinstance(response.json(), list))
 
     def test_chat_query(self):
-        response = self.client.post("/api/chat/", {"query": "Hello", "context": {}})
+        response = self.client.post("/api/chat/query/", {"query": "Hello", "context": {}})
         self.assertEqual(response.status_code, 200)
         self.assertIn("response", response.json())

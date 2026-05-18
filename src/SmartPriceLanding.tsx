@@ -707,6 +707,7 @@ const SmartPriceLanding: React.FC = () => {
                                 const data = await response.json();
                                 saveUser(data.user);
                                 setLoginAttempts(0);
+                                (window as any).posthog?.capture('user_logged_in', { email });
                               } else {
                                 const err = await response.json();
                                 const newAttempts = loginAttempts + 1;
@@ -905,6 +906,7 @@ const SmartPriceLanding: React.FC = () => {
                             if (response.ok) {
                               const data = await response.json();
                               saveUser(data.user || { email: pendingEmail! });
+                              (window as any).posthog?.capture('user_registered', { email: pendingEmail });
                             } else {
                               const err = await response.json();
                               const newAttempts = codeAttempts + 1;
