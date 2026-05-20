@@ -1,0 +1,12 @@
+node_modules
+dist
+build
+.git
+.github
+.venv
+*.pyc
+__pycache__
+db.sqlite3
+deploy_key*
+backend/.env
+backend/staticfiles
