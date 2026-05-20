@@ -23,6 +23,13 @@ services:
       - static_volume:/app/staticfiles
     env_file:
       - ./backend/.env
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=smartprice
+      - DB_USER=smartprice_user
+      - DB_PASSWORD=smartprice_password
+      - DEBUG=False
     depends_on:
       - db
     restart: always

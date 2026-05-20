@@ -65,6 +65,7 @@ jobs:
         username: ${{ secrets.DO_USERNAME }}
         port: 22
         key: ${{ secrets.DO_SSH_KEY }}
+        envs: OPENROUTER_API_KEY
         script: |
           if [ ! -d ~/smartprice ]; then
             git clone https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git ~/smartprice
@@ -74,4 +75,10 @@ jobs:
             git pull origin main
           fi
           cd ~/smartprice
+          mkdir -p backend
+          if [ ! -f backend/.env ]; then
+            echo "Creating default backend/.env"
+            echo "SECRET_KEY=django-insecure-prod-$(openssl rand -hex 32)" > backend/.env
+            echo "OPENROUTER_API_KEY=$OPENROUTER_API_KEY" >> backend/.env
+          fi
           docker-compose -f docker-compose.prod.yml up -d --build
