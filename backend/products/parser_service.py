@@ -17,6 +17,10 @@ class BaseParser:
         try:
             response = requests.get(url, headers=self.headers, timeout=15)
             response.raise_for_status()
+            # Ensure requests uses a sensible encoding. Some sites don't send
+            # proper headers; use apparent_encoding as a best-effort fallback
+            # and fall back to utf-8 to avoid mojibake.
+            response.encoding = response.apparent_encoding or 'utf-8'
             return response.text
         except Exception as e:
             logger.error(f"Error fetching {url}: {e}")

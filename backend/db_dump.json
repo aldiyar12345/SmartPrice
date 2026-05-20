@@ -129,56 +129,56 @@
     "model": "products.category",
     "pk": 15,
     "fields": {
-      "name": "╤ьрЁЄЇюэ√"
+      "name": "Смартфоны"
     }
   },
   {
     "model": "products.category",
     "pk": 16,
     "fields": {
-      "name": "═юєЄсєъш"
+      "name": "Ноутбуки"
     }
   },
   {
     "model": "products.category",
     "pk": 17,
     "fields": {
-      "name": "╥хыхтшчюЁ√"
+      "name": "Телевизоры"
     }
   },
   {
     "model": "products.category",
     "pk": 18,
     "fields": {
-      "name": "╧ырэ°хЄ√"
+      "name": "Планшеты"
     }
   },
   {
     "model": "products.category",
     "pk": 19,
     "fields": {
-      "name": "╫рё√"
+      "name": "Часы"
     }
   },
   {
     "model": "products.category",
     "pk": 20,
     "fields": {
-      "name": "└єфшю"
+      "name": "Аудио"
     }
   },
   {
     "model": "products.category",
     "pk": 21,
     "fields": {
-      "name": "┴√Єютр  Єхїэшър"
+      "name": "Бытовая техника"
     }
   },
   {
     "model": "products.category",
     "pk": 22,
     "fields": {
-      "name": "╧ЁшёЄртъш"
+      "name": "Приставки"
     }
   },
   {
@@ -245,7 +245,7 @@
     "model": "products.product",
     "pk": 49,
     "fields": {
-      "name": "╥хыхтшчюЁ LG OLED55C34LA",
+      "name": "Телевизор LG OLED55C34LA",
       "category": 17,
       "tags": [],
       "rating": "5.0"
@@ -255,7 +255,7 @@
     "model": "products.product",
     "pk": 50,
     "fields": {
-      "name": "╥хыхтшчюЁ Samsung 50CU7100",
+      "name": "Телевизор Samsung 50CU7100",
       "category": 17,
       "tags": [],
       "rating": "4.7"
@@ -305,7 +305,7 @@
     "model": "products.product",
     "pk": 55,
     "fields": {
-      "name": "╧√ыхёюё Dyson V15 Detect",
+      "name": "Пылесос Dyson V15 Detect",
       "category": 21,
       "tags": [],
       "rating": "5.0"
@@ -315,7 +315,7 @@
     "model": "products.product",
     "pk": 56,
     "fields": {
-      "name": "╩юЇхьр°шэр DeLonghi Magnifica",
+      "name": "Кофемашина DeLonghi Magnifica",
       "category": 21,
       "tags": [],
       "rating": "4.7"
@@ -338,7 +338,7 @@
       "product": 43,
       "marketplace": "Technodom",
       "price": 389390,
-      "label": "╒шЄ яЁюфрц",
+      "label": "Хит продаж",
       "url": "https://www.technodom.kz/p/smartfon-apple-iphone-15-6-128gb-black-mtp03-278484",
       "last_updated_at": "2026-04-04T08:30:28.787Z"
     }
@@ -350,7 +350,7 @@
       "product": 43,
       "marketplace": "Sulpak",
       "price": 395900,
-      "label": "╨рёёЁюўър",
+      "label": "Рассрочка",
       "url": "https://www.sulpak.kz/g/smartfoniy_apple_iphone_15_128gb_black",
       "last_updated_at": "2026-04-04T08:30:32.086Z"
     }
@@ -362,7 +362,7 @@
       "product": 43,
       "marketplace": "Mechta",
       "price": 399990,
-      "label": "╬ЇшЎшры№эю",
+      "label": "Официально",
       "url": "https://www.mechta.kz/product/smartfon-apple-iphone-15-128gb-black/",
       "last_updated_at": "2026-04-04T08:30:34.723Z"
     }
@@ -374,7 +374,7 @@
       "product": 44,
       "marketplace": "Technodom",
       "price": 550200,
-      "label": "╤ъшфър",
+      "label": "Скидка",
       "url": "https://www.technodom.kz/p/smartfon-samsung-galaxy-s24-ultra-12-256gb-titanium-gray-sm-s928bztnskz-280451",
       "last_updated_at": "2026-04-04T08:30:36.972Z"
     }
@@ -386,7 +386,7 @@
       "product": 44,
       "marketplace": "Sulpak",
       "price": 555800,
-      "label": "╩¤°схъ 10%",
+      "label": "Кэшбек 10%",
       "url": "https://www.sulpak.kz/g/smartfoniy_samsung_galaxy_s24_ultra_12_256gb_titanium_gray_sm_s928bztnskz",
       "last_updated_at": "2026-04-04T08:30:40.574Z"
     }
@@ -398,7 +398,7 @@
       "product": 44,
       "marketplace": "Mechta",
       "price": 545300,
-      "label": "╦єў°р  Ўхэр",
+      "label": "Лучшая цена",
       "url": "https://www.mechta.kz/product/smartfon-samsung-galaxy-s24-ultra-12256gb-titanium-gray/",
       "last_updated_at": "2026-04-04T08:30:43.375Z"
     }
@@ -410,7 +410,7 @@
       "product": 45,
       "marketplace": "Technodom",
       "price": 428600,
-      "label": "┬ эрышўшш",
+      "label": "В наличии",
       "url": "https://www.technodom.kz/p/smartfon-xiaomi-14-12-512gb-black-283181",
       "last_updated_at": "2026-04-04T08:30:46.595Z"
     }
@@ -422,7 +422,7 @@
       "product": 45,
       "marketplace": "Sulpak",
       "price": 430290,
-      "label": "═ютшэър",
+      "label": "Новинка",
       "url": "https://www.sulpak.kz/g/smartfoniy_xiaomi_14_12_512gb_black",
       "last_updated_at": "2026-04-04T08:30:49.400Z"
     }
@@ -434,7 +434,7 @@
       "product": 46,
       "marketplace": "Technodom",
       "price": 528590,
-      "label": "╤ЄєфхэЄрь -5%",
+      "label": "Студентам -5%",
       "url": "https://www.technodom.kz/p/noutbuk-apple-macbook-air-13-m3-8-256gb-midnight-mry33-282637",
       "last_updated_at": "2026-04-04T08:30:52.439Z"
     }
@@ -446,7 +446,7 @@
       "product": 46,
       "marketplace": "Sulpak",
       "price": 535900,
-      "label": "╬ЇшЎшры№эю",
+      "label": "Официально",
       "url": "https://www.sulpak.kz/g/noutbukiy_apple_macbook_air_13_m3_8_256gb_midnight_mry33",
       "last_updated_at": "2026-04-04T08:30:55.454Z"
     }
@@ -458,7 +458,7 @@
       "product": 46,
       "marketplace": "Mechta",
       "price": 530990,
-      "label": "┬ эрышўшш",
+      "label": "В наличии",
       "url": "https://www.mechta.kz/product/noutbuk-apple-macbook-air-13-m3-8256gb-midnight-mry33/",
       "last_updated_at": "2026-04-04T08:30:58.083Z"
     }
@@ -470,7 +470,7 @@
       "product": 47,
       "marketplace": "Technodom",
       "price": 690700,
-      "label": "├хщьхЁрь",
+      "label": "Геймерам",
       "url": "https://www.technodom.kz/p/noutbuk-igrovoj-asus-rog-strix-g16-g614jv-n3106-271383",
       "last_updated_at": "2026-04-04T08:31:01.098Z"
     }
@@ -482,7 +482,7 @@
       "product": 47,
       "marketplace": "Mechta",
       "price": 699990,
-      "label": "╠ю∙э√щ",
+      "label": "Мощный",
       "url": "https://www.mechta.kz/product/noutbuk-asus-rog-strix-g16-g614jv-n3106/",
       "last_updated_at": "2026-04-04T08:31:03.613Z"
     }
@@ -494,7 +494,7 @@
       "product": 48,
       "marketplace": "Sulpak",
       "price": 380500,
-      "label": "╤єяхЁ Ўхэр",
+      "label": "Супер цена",
       "url": "https://www.sulpak.kz/g/noutbukiy_lenovo_ideapad_5_pro_16_ach6",
       "last_updated_at": "2026-04-04T08:31:05.931Z"
     }
@@ -506,7 +506,7 @@
       "product": 48,
       "marketplace": "Alser",
       "price": 385100,
-      "label": "╒шЄ",
+      "label": "Хит",
       "url": "https://alser.kz/p/noutbuk-lenovo-ideapad-5-pro-16ach6",
       "last_updated_at": "2026-04-04T08:31:09.372Z"
     }
@@ -530,7 +530,7 @@
       "product": 49,
       "marketplace": "Mechta",
       "price": 755000,
-      "label": "╨рёёЁюўър 0-0-12",
+      "label": "Рассрочка 0-0-12",
       "url": "https://www.mechta.kz/product/led-televizor-lg-oled55c3rl/",
       "last_updated_at": "2026-04-04T08:31:15.753Z"
     }
@@ -542,7 +542,7 @@
       "product": 50,
       "marketplace": "Sulpak",
       "price": 221400,
-      "label": "╬Єышўэ√щ т√сюЁ",
+      "label": "Отличный выбор",
       "url": "https://www.sulpak.kz/g/televizoriy_samsung_ue50cu7100uxce",
       "last_updated_at": "2026-04-04T08:31:18.358Z"
     }
@@ -554,7 +554,7 @@
       "product": 50,
       "marketplace": "Alser",
       "price": 223790,
-      "label": "┬ эрышўшш",
+      "label": "В наличии",
       "url": "https://alser.kz/p/televizor-samsung-ue50cu7100uxce",
       "last_updated_at": "2026-04-04T08:31:21.586Z"
     }
@@ -566,7 +566,7 @@
       "product": 51,
       "marketplace": "Technodom",
       "price": 360490,
-      "label": "═ютшэър",
+      "label": "Новинка",
       "url": "https://www.technodom.kz/p/planshet-apple-ipad-air-11-2024-wi-fi-128gb-space-grey-muwc3-285633",
       "last_updated_at": "2026-04-04T08:31:24.427Z"
     }
@@ -578,7 +578,7 @@
       "product": 51,
       "marketplace": "Mechta",
       "price": 355000,
-      "label": "╤ъшфър",
+      "label": "Скидка",
       "url": "https://www.mechta.kz/product/planshet-apple-ipad-air-11-2024-wi-fi-128gb-space-gray/",
       "last_updated_at": "2026-04-04T08:31:27.959Z"
     }
@@ -590,7 +590,7 @@
       "product": 52,
       "marketplace": "Sulpak",
       "price": 409600,
-      "label": "╧юфрЁюъ эрє°эшъш",
+      "label": "Подарок наушники",
       "url": "https://www.sulpak.kz/g/planshetiy_samsung_galaxy_tab_s9_128gb_gray",
       "last_updated_at": "2026-04-04T08:31:30.609Z"
     }
@@ -602,7 +602,7 @@
       "product": 52,
       "marketplace": "Alser",
       "price": 415000,
-      "label": "╬ЇшЎшры№эю",
+      "label": "Официально",
       "url": "https://alser.kz/p/planshet-samsung-galaxy-tab-s9-11-128gb-gray",
       "last_updated_at": "2026-04-04T08:31:33.956Z"
     }
@@ -614,7 +614,7 @@
       "product": 53,
       "marketplace": "Technodom",
       "price": 221000,
-      "label": "╥юя",
+      "label": "Топ",
       "url": "https://www.technodom.kz/p/smart-chasy-apple-watch-series-9-45mm-midnight-271015",
       "last_updated_at": "2026-04-04T08:31:37.562Z"
     }
@@ -626,7 +626,7 @@
       "product": 53,
       "marketplace": "Sulpak",
       "price": 218790,
-      "label": "└ъЎш ",
+      "label": "Акция",
       "url": "https://www.sulpak.kz/g/umniye_chasiy_apple_watch_series_9_45mm_midnight",
       "last_updated_at": "2026-04-04T08:31:40.367Z"
     }
@@ -638,7 +638,7 @@
       "product": 54,
       "marketplace": "Technodom",
       "price": 125000,
-      "label": "└фряЄштэюх рєфшю",
+      "label": "Адаптивное аудио",
       "url": "https://www.technodom.kz/p/naushniki-apple-airpods-pro-2-s-zaryadnym-futlyarom-magm-272098",
       "last_updated_at": "2026-04-04T08:31:42.568Z"
     }
@@ -650,7 +650,7 @@
       "product": 54,
       "marketplace": "Mechta",
       "price": 121900,
-      "label": "╪єьюяюфртыхэшх",
+      "label": "Шумоподавление",
       "url": "https://www.mechta.kz/product/naushniki-apple-airpods-pro-2-usb-c/",
       "last_updated_at": "2026-04-04T08:31:45.804Z"
     }
@@ -662,7 +662,7 @@
       "product": 55,
       "marketplace": "Sulpak",
       "price": 443600,
-      "label": "╬Ёшушэры",
+      "label": "Оригинал",
       "url": "https://www.sulpak.kz/g/piylesosiy_dyson_v15_sv47_detect_absolute",
       "last_updated_at": "2026-04-04T08:31:49.331Z"
     }
@@ -674,7 +674,7 @@
       "product": 55,
       "marketplace": "Mechta",
       "price": 449990,
-      "label": "┴хёЄёхыыхЁ",
+      "label": "Бестселлер",
       "url": "https://www.mechta.kz/product/pylesos-dyson-v15-detect-absolute-447000-01/",
       "last_updated_at": "2026-04-04T08:31:52.683Z"
     }
@@ -686,7 +686,7 @@
       "product": 56,
       "marketplace": "Technodom",
       "price": 189900,
-      "label": "╚фхры№э√щ ъюЇх",
+      "label": "Идеальный кофе",
       "url": "https://www.technodom.kz/p/kofemashina-delonghi-ecam-22-110-b-63231",
       "last_updated_at": "2026-04-04T08:31:55.197Z"
     }
@@ -698,7 +698,7 @@
       "product": 56,
       "marketplace": "Alser",
       "price": 186700,
-      "label": "╤ъшфър",
+      "label": "Скидка",
       "url": "https://alser.kz/p/kofemashina-avtomaticheskaya-delonghi-ecam-22110b",
       "last_updated_at": "2026-04-04T08:31:58.012Z"
     }
@@ -710,7 +710,7 @@
       "product": 57,
       "marketplace": "Technodom",
       "price": 289400,
-      "label": "├рЁрэЄш ",
+      "label": "Гарантия",
       "url": "https://www.technodom.kz/p/igrovaja-pristavka-sony-playstation-5-slim-1tb-276329",
       "last_updated_at": "2026-04-04T08:32:00.352Z"
     }
@@ -722,7 +722,7 @@
       "product": 57,
       "marketplace": "Sulpak",
       "price": 286790,
-      "label": "╥юя яЁюфрц",
+      "label": "Топ продаж",
       "url": "https://www.sulpak.kz/g/igroviye_pristavki_sony_playstation_5_slim",
       "last_updated_at": "2026-04-04T08:32:02.944Z"
     }
@@ -734,7 +734,7 @@
       "product": 57,
       "marketplace": "Mechta",
       "price": 289990,
-      "label": "╙цх т эрышўшш",
+      "label": "Уже в наличии",
       "url": "https://www.mechta.kz/product/igrovaya-konsol-sony-playstation-5-slim/",
       "last_updated_at": "2026-04-04T08:32:06.279Z"
     }
@@ -744,7 +744,7 @@
     "pk": 57,
     "fields": {
       "category": 15,
-      "name": "╩рьхЁр"
+      "name": "Камера"
     }
   },
   {
@@ -752,7 +752,7 @@
     "pk": 58,
     "fields": {
       "category": 15,
-      "name": "▌ъЁрэ"
+      "name": "Экран"
     }
   },
   {
@@ -760,7 +760,7 @@
     "pk": 59,
     "fields": {
       "category": 15,
-      "name": "╧ЁюшчтюфшЄхы№эюёЄ№"
+      "name": "Производительность"
     }
   },
   {
@@ -768,7 +768,7 @@
     "pk": 60,
     "fields": {
       "category": 15,
-      "name": "┴рЄрЁх "
+      "name": "Батарея"
     }
   },
   {
@@ -776,7 +776,7 @@
     "pk": 61,
     "fields": {
       "category": 15,
-      "name": "▌Ёуюэюьшър"
+      "name": "Эргономика"
     }
   },
   {
@@ -784,7 +784,7 @@
     "pk": 62,
     "fields": {
       "category": 16,
-      "name": "▌ъЁрэ"
+      "name": "Экран"
     }
   },
   {
@@ -792,7 +792,7 @@
     "pk": 63,
     "fields": {
       "category": 16,
-      "name": "╧ЁюшчтюфшЄхы№эюёЄ№"
+      "name": "Производительность"
     }
   },
   {
@@ -800,7 +800,7 @@
     "pk": 64,
     "fields": {
       "category": 16,
-      "name": "└тЄюэюьэюёЄ№"
+      "name": "Автономность"
     }
   },
   {
@@ -808,7 +808,7 @@
     "pk": 65,
     "fields": {
       "category": 16,
-      "name": "╧юЁЄрЄштэюёЄ№"
+      "name": "Портативность"
     }
   },
   {
@@ -816,7 +816,7 @@
     "pk": 66,
     "fields": {
       "category": 16,
-      "name": "╩ыртшрЄєЁр"
+      "name": "Клавиатура"
     }
   },
   {
@@ -824,7 +824,7 @@
     "pk": 67,
     "fields": {
       "category": 17,
-      "name": "▌ъЁрэ"
+      "name": "Экран"
     }
   },
   {
@@ -832,7 +832,7 @@
     "pk": 68,
     "fields": {
       "category": 17,
-      "name": "╟тєъ"
+      "name": "Звук"
     }
   },
   {
@@ -840,7 +840,7 @@
     "pk": 69,
     "fields": {
       "category": 17,
-      "name": "╚эЄхЁЇхщё"
+      "name": "Интерфейс"
     }
   },
   {
@@ -848,7 +848,7 @@
     "pk": 70,
     "fields": {
       "category": 17,
-      "name": "╚уЁютющ Ёхцшь"
+      "name": "Игровой режим"
     }
   },
   {
@@ -856,7 +856,7 @@
     "pk": 71,
     "fields": {
       "category": 17,
-      "name": "─шчрщэ"
+      "name": "Дизайн"
     }
   },
   {
@@ -864,7 +864,7 @@
     "pk": 72,
     "fields": {
       "category": 18,
-      "name": "▌ъЁрэ"
+      "name": "Экран"
     }
   },
   {
@@ -872,7 +872,7 @@
     "pk": 73,
     "fields": {
       "category": 18,
-      "name": "╧ЁюшчтюфшЄхы№эюёЄ№"
+      "name": "Производительность"
     }
   },
   {
@@ -880,7 +880,7 @@
     "pk": 74,
     "fields": {
       "category": 18,
-      "name": "┴рЄрЁх "
+      "name": "Батарея"
     }
   },
   {
@@ -888,7 +888,7 @@
     "pk": 75,
     "fields": {
       "category": 18,
-      "name": "╤Єшыєё"
+      "name": "Стилус"
     }
   },
   {
@@ -896,7 +896,7 @@
     "pk": 76,
     "fields": {
       "category": 18,
-      "name": "▌Ёуюэюьшър"
+      "name": "Эргономика"
     }
   },
   {
@@ -904,7 +904,7 @@
     "pk": 77,
     "fields": {
       "category": 19,
-      "name": "▌ъЁрэ"
+      "name": "Экран"
     }
   },
   {
@@ -912,7 +912,7 @@
     "pk": 78,
     "fields": {
       "category": 19,
-      "name": "╤яюЁЄ. ЇєэъЎшш"
+      "name": "Спорт. функции"
     }
   },
   {
@@ -920,7 +920,7 @@
     "pk": 79,
     "fields": {
       "category": 19,
-      "name": "┴рЄрЁх "
+      "name": "Батарея"
     }
   },
   {
@@ -928,7 +928,7 @@
     "pk": 80,
     "fields": {
       "category": 19,
-      "name": "─шчрщэ"
+      "name": "Дизайн"
     }
   },
   {
@@ -936,7 +936,7 @@
     "pk": 81,
     "fields": {
       "category": 19,
-      "name": "▌ъюёшёЄхьр"
+      "name": "Экосистема"
     }
   },
   {
@@ -944,7 +944,7 @@
     "pk": 82,
     "fields": {
       "category": 20,
-      "name": "╟тєъ"
+      "name": "Звук"
     }
   },
   {
@@ -952,7 +952,7 @@
     "pk": 83,
     "fields": {
       "category": 20,
-      "name": "╪єьюяюфртыхэшх"
+      "name": "Шумоподавление"
     }
   },
   {
@@ -960,7 +960,7 @@
     "pk": 84,
     "fields": {
       "category": 20,
-      "name": "╠шъЁюЇюэ"
+      "name": "Микрофон"
     }
   },
   {
@@ -968,7 +968,7 @@
     "pk": 85,
     "fields": {
       "category": 20,
-      "name": "┴рЄрЁх "
+      "name": "Батарея"
     }
   },
   {
@@ -976,7 +976,7 @@
     "pk": 86,
     "fields": {
       "category": 20,
-      "name": "▌Ёуюэюьшър"
+      "name": "Эргономика"
     }
   },
   {
@@ -984,7 +984,7 @@
     "pk": 87,
     "fields": {
       "category": 21,
-      "name": "▌ЇЇхъЄштэюёЄ№"
+      "name": "Эффективность"
     }
   },
   {
@@ -992,7 +992,7 @@
     "pk": 88,
     "fields": {
       "category": 21,
-      "name": "╙Ёютхэ№ °єьр"
+      "name": "Уровень шума"
     }
   },
   {
@@ -1000,7 +1000,7 @@
     "pk": 89,
     "fields": {
       "category": 21,
-      "name": "╘єэъЎшюэры"
+      "name": "Функционал"
     }
   },
   {
@@ -1008,7 +1008,7 @@
     "pk": 90,
     "fields": {
       "category": 21,
-      "name": "─шчрщэ"
+      "name": "Дизайн"
     }
   },
   {
@@ -1016,7 +1016,7 @@
     "pk": 91,
     "fields": {
       "category": 21,
-      "name": "▌эхЁуюяхЁхфрўр"
+      "name": "Энергопередача"
     }
   },
   {
@@ -1024,7 +1024,7 @@
     "pk": 92,
     "fields": {
       "category": 22,
-      "name": "╧ЁюшчтюфшЄхы№эюёЄ№"
+      "name": "Производительность"
     }
   },
   {
@@ -1032,7 +1032,7 @@
     "pk": 93,
     "fields": {
       "category": 22,
-      "name": "▌ъёъы■чшт√"
+      "name": "Эксклюзивы"
     }
   },
   {
@@ -1040,7 +1040,7 @@
     "pk": 94,
     "fields": {
       "category": 22,
-      "name": "├хщьярф"
+      "name": "Геймпад"
     }
   },
   {
@@ -1048,7 +1048,7 @@
     "pk": 95,
     "fields": {
       "category": 22,
-      "name": "╙Ёютхэ№ °єьр"
+      "name": "Уровень шума"
     }
   },
   {
@@ -1056,7 +1056,7 @@
     "pk": 96,
     "fields": {
       "category": 22,
-      "name": "─шчрщэ"
+      "name": "Дизайн"
     }
   },
   {
