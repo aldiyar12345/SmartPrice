@@ -37,3 +37,20 @@ npm run dev
 ```bash
 python manage.py test
 ```
+
+## Продакшен-деплой
+
+1. На сервере DigitalOcean установите `docker` и `docker-compose`.
+2. Создайте на сервере папку `~/smartprice` и разместите там репозиторий.
+3. В `backend/.env` настройте данные для production (см. `backend/.env.example`).
+4. В Namecheap настройте DNS:
+   - `A @ -> 165.22.253.31`
+   - `A www -> 165.22.253.31`
+5. В GitHub Actions добавьте secrets:
+   - `DO_HOST` = `165.22.253.31`
+   - `DO_USERNAME` = ваш SSH-пользователь на Droplet
+   - `DO_SSH_KEY` = приватный SSH-ключ для подключения к серверу
+6. Запустите на сервере:
+```bash
+docker-compose -f docker-compose.prod.yml up -d --build
+```

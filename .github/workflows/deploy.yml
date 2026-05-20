@@ -63,8 +63,9 @@ jobs:
       with:
         host: ${{ secrets.DO_HOST }}
         username: ${{ secrets.DO_USERNAME }}
+        port: 22
         key: ${{ secrets.DO_SSH_KEY }}
         script: |
-          cd ~/smartprice || git clone git@github.com:${{ github.repository }}.git ~/smartprice && cd ~/smartprice
+          cd ~/smartprice || git clone https://github.com/${{ github.repository }}.git ~/smartprice && cd ~/smartprice
           git pull origin main
           docker-compose -f docker-compose.prod.yml up -d --build
