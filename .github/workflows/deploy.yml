@@ -63,7 +63,7 @@ jobs:
       with:
         host: ${{ secrets.DO_HOST }}
         username: ${{ secrets.DO_USERNAME }}
-        key: ${{ secrets.DO_SSH_KEY }}
+        password: ${{ secrets.DO_PASSWORD }}
         script: |
           cd ~/smartprice || git clone git@github.com:${{ github.repository }}.git ~/smartprice && cd ~/smartprice
           git pull origin main
