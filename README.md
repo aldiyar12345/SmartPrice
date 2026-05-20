@@ -50,7 +50,9 @@ python manage.py test
    - `DO_HOST` = `165.22.253.31`
    - `DO_USERNAME` = ваш SSH-пользователь на Droplet
    - `DO_SSH_KEY` = приватный SSH-ключ для подключения к серверу
-6. Запустите на сервере:
+6. На сервере создайте `backend/.env` на основе `backend/.env.example`.
+   Убедитесь, что в нём указан `ALLOWED_HOSTS` с вашим доменом и IP.
+7. Запустите на сервере:
 ```bash
 docker-compose -f docker-compose.prod.yml up -d --build
 ```

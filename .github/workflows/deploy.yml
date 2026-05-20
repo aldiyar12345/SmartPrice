@@ -66,6 +66,12 @@ jobs:
         port: 22
         key: ${{ secrets.DO_SSH_KEY }}
         script: |
-          cd ~/smartprice || git clone https://github.com/${{ github.repository }}.git ~/smartprice && cd ~/smartprice
-          git pull origin main
+          if [ ! -d ~/smartprice ]; then
+            git clone https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git ~/smartprice
+          else
+            cd ~/smartprice
+            git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+            git pull origin main
+          fi
+          cd ~/smartprice
           docker-compose -f docker-compose.prod.yml up -d --build
