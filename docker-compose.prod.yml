@@ -39,7 +39,7 @@ services:
       context: .
       dockerfile: Dockerfile.frontend
     ports:
-      - "80:80"
+      - "127.0.0.1:8080:80"
     volumes:
       - static_volume:/app/staticfiles
     depends_on:
