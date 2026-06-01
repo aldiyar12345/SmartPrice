@@ -8,6 +8,7 @@ from .views import (
     ChatQueryView,
     CategoryFeaturesAPIView,
     RecommendProductsAPIView,
+    HealthCheckView,
 )
 
 urlpatterns = [
@@ -19,4 +20,5 @@ urlpatterns = [
     path("favorites/", FavoriteListCreateView.as_view(), name="favorite-list-create"),
     path("favorites/<int:product_id>/", FavoriteDeleteView.as_view(), name="favorite-delete"),
     path("chat/query/", ChatQueryView.as_view(), name="chat-query"),
+    path("health/", HealthCheckView.as_view(), name="health-check"),
 ]

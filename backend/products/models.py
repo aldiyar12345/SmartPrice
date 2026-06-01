@@ -12,7 +12,7 @@ class Category(models.Model):
 
 
 class Product(models.Model):
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, db_index=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="products")
     tags = models.JSONField(default=list)
     rating = models.DecimalField(max_digits=3, decimal_places=1)
@@ -23,8 +23,8 @@ class Product(models.Model):
 
 class MarketplaceOffer(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="offers")
-    marketplace = models.CharField(max_length=100)
-    price = models.BigIntegerField()
+    marketplace = models.CharField(max_length=100, db_index=True)
+    price = models.BigIntegerField(db_index=True)
     label = models.CharField(max_length=200, blank=True, default="")
     url = models.URLField(max_length=500, blank=True, null=True, verbose_name="Ссылка на товар")
     last_updated_at = models.DateTimeField(auto_now=True, null=True, blank=True, verbose_name="Последнее обновление цены")

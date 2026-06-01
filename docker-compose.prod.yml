@@ -33,6 +33,34 @@ services:
       - PYTHONIOENCODING=utf-8
     depends_on:
       - db
+      - redis
+    restart: always
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    restart: always
+
+  celery_worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: celery -A config worker -l info
+    env_file:
+      - ./backend/.env
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=smartprice
+      - DB_USER=smartprice_user
+      - DB_PASSWORD=smartprice_password
+      - DEBUG=False
+      - PYTHONIOENCODING=utf-8
+    depends_on:
+      - db
+      - redis
+      - backend
     restart: always
 
   nginx:

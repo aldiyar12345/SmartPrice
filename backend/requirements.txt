@@ -7,3 +7,8 @@ python-dotenv
 requests
 drf-spectacular
 sentry-sdk
+pytest-django
+pytest-cov
+celery
+redis
+django-ratelimit

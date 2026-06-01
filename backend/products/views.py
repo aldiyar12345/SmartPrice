@@ -5,8 +5,12 @@ from rest_framework.views import APIView
 from django.db.models import Min
 from .models import Category, Product, Favorite, Feature, ProductFeatureScore
 from .serializers import CategorySerializer, ProductSerializer, FavoriteSerializer, FeatureSerializer, RecommendedProductSerializer
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
+from django_ratelimit.decorators import ratelimit
 
 
+@method_decorator(cache_page(60 * 15), name='dispatch')
 class CategoryListView(generics.ListAPIView):
     queryset = Category.objects.all().order_by("name")
     serializer_class = CategorySerializer
@@ -81,6 +85,7 @@ class FavoriteDeleteView(APIView):
         return Response({"error": "Not found"}, status=status.HTTP_404_NOT_FOUND)
 
 
+@method_decorator(ratelimit(key='ip', rate='5/m', method=['POST']), name='dispatch')
 class ChatQueryView(APIView):
     def post(self, request):
         message = request.data.get("message", "").strip()
@@ -159,6 +164,7 @@ class ChatQueryView(APIView):
             return Response({"response": f"Проблема с подключением к ИИ."})
 
 
+@method_decorator(cache_page(60 * 15), name='dispatch')
 class CategoryFeaturesAPIView(APIView):
     def get(self, request, category_id):
         features = Feature.objects.filter(category_id=category_id)
@@ -192,3 +198,27 @@ class RecommendProductsAPIView(APIView):
         
         serializer = RecommendedProductSerializer(results, many=True)
         return Response(serializer.data)
+
+
+class HealthCheckView(APIView):
+    def get(self, request):
+        status_data = {"status": "ok", "db": "ok", "cache": "ok"}
+        # Check DB
+        try:
+            Product.objects.exists()
+        except Exception:
+            status_data["db"] = "error"
+            status_data["status"] = "error"
+        # Check Cache
+        try:
+            from django.core.cache import cache
+            cache.set('health_check', 'ok', timeout=1)
+            if cache.get('health_check') != 'ok':
+                status_data["cache"] = "error"
+                status_data["status"] = "error"
+        except Exception:
+            status_data["cache"] = "error"
+            status_data["status"] = "error"
+            
+        return Response(status_data, status=200 if status_data["status"] == "ok" else 500)
+
