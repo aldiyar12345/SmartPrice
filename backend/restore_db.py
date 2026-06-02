@@ -17,17 +17,21 @@ with connection.cursor() as cursor:
 
 print("Loading db_dump.json with UTF-8 encoding...")
 
-# Clear existing data
+print("Checking database status...")
+
 from django.contrib.auth.models import User
 from products.models import Category, Product, MarketplaceOffer, Feature, ProductFeatureScore
 
-ProductFeatureScore.objects.all().delete()
-Feature.objects.all().delete()
-MarketplaceOffer.objects.all().delete()
-Product.objects.all().delete()
-Category.objects.all().delete()
+if Category.objects.exists():
+    print("Database already contains data. Skipping db_dump.json restore to prevent data loss.")
+else:
+    print("Database is empty. Clearing existing data (if any) and loading new data...")
+    ProductFeatureScore.objects.all().delete()
+    Feature.objects.all().delete()
+    MarketplaceOffer.objects.all().delete()
+    Product.objects.all().delete()
+    Category.objects.all().delete()
 
-print("Cleared existing data. Loading new data...")
 
 try:
     call_command('loaddata', 'db_dump.json', verbosity=2)

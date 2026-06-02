@@ -34,7 +34,7 @@ def get_tokens_for_user(user):
         "access": str(refresh.access_token),
     }
 
-@method_decorator(ratelimit(key='ip', rate='10/m', method=['POST']), name='dispatch')
+@method_decorator(ratelimit(key='header:x-forwarded-for', rate='10/m', method=['POST'], block=False), name='dispatch')
 class RegisterView(APIView):
     def post(self, request):
         email = request.data.get("email", "").strip()
@@ -58,7 +58,7 @@ class RegisterView(APIView):
         tokens = get_tokens_for_user(user)
         return Response({"user": {"email": user.email}, **tokens}, status=status.HTTP_201_CREATED)
 
-@method_decorator(ratelimit(key='ip', rate='10/m', method=['POST']), name='dispatch')
+@method_decorator(ratelimit(key='header:x-forwarded-for', rate='10/m', method=['POST'], block=False), name='dispatch')
 class LoginView(APIView):
     def post(self, request):
         email = request.data.get("email", "").strip()
@@ -94,7 +94,7 @@ class MeView(APIView):
 
 from .services.google_auth import verify_google_token
 
-@method_decorator(ratelimit(key='ip', rate='10/m', method=['POST']), name='dispatch')
+@method_decorator(ratelimit(key='header:x-forwarded-for', rate='10/m', method=['POST'], block=False), name='dispatch')
 class GoogleLoginView(APIView):
     permission_classes = [AllowAny]
 
