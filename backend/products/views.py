@@ -85,7 +85,7 @@ class FavoriteDeleteView(APIView):
         return Response({"error": "Not found"}, status=status.HTTP_404_NOT_FOUND)
 
 
-@method_decorator(ratelimit(key='ip', rate='5/m', method=['POST']), name='dispatch')
+@method_decorator(ratelimit(key='header:x-forwarded-for', rate='5/m', method=['POST'], block=False), name='dispatch')
 class ChatQueryView(APIView):
     def post(self, request):
         message = request.data.get("message", "").strip()
