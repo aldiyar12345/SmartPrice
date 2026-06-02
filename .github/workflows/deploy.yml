@@ -40,7 +40,7 @@ jobs:
       env:
         DB_PASSWORD: 200723
       run: |
-        python manage.py test
+        pytest -v --cov=.
 
   build-frontend:
     runs-on: ubuntu-latest
@@ -84,7 +84,10 @@ jobs:
             echo "OPENROUTER_API_KEY=$OPENROUTER_API_KEY" >> backend/.env
           fi
           if command -v docker-compose &> /dev/null; then
-            docker-compose -f docker-compose.prod.yml up -d --build
+            DC_CMD="docker-compose"
           else
-            docker compose -f docker-compose.prod.yml up -d --build
+            DC_CMD="docker compose"
           fi
+          $DC_CMD -f docker-compose.prod.yml build
+          $DC_CMD -f docker-compose.prod.yml run --rm backend python manage.py migrate
+          $DC_CMD -f docker-compose.prod.yml up -d
