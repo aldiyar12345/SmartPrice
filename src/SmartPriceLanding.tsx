@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from "react";
 import { Search, Zap, Heart, Menu, X } from "lucide-react";
 import { RecommendationWidget } from "./components/RecommendationWidget";
-
+import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
+import { GoogleLogin } from "@react-oauth/google";
 type MarketplaceOffer = {
   marketplace: string;
   price: number;
@@ -70,6 +71,7 @@ const Filters = React.memo<FiltersProps>(
 type Page = "home" | "catalog" | "favorites" | "profile" | "admin";
 
 const SmartPriceLanding: React.FC = () => {
+  const { executeRecaptcha } = useGoogleReCaptcha();
   const [page, setPage] = useState<Page>("home");
   const [menuOpen, setMenuOpen] = useState(false);
   const [metrics, setMetrics] = useState<{ users: number; products: number; categories: number; features: number } | null>(null);
@@ -685,6 +687,36 @@ const SmartPriceLanding: React.FC = () => {
                           Регистрация
                         </button>
                       </div>
+                      
+                      <div className="mb-4 flex justify-center">
+                        <GoogleLogin
+                          onSuccess={async (credentialResponse) => {
+                            try {
+                              const res = await fetch("/api/auth/google-login/", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ token: credentialResponse.credential }),
+                              });
+                              if (res.ok) {
+                                const data = await res.json();
+                                saveUser(data.user);
+                              } else {
+                                alert("Ошибка авторизации Google");
+                              }
+                            } catch (e) {
+                              alert("Ошибка сети");
+                            }
+                          }}
+                          onError={() => {
+                            console.log('Login Failed');
+                          }}
+                        />
+                      </div>
+                      <div className="flex items-center my-4">
+                        <div className="flex-grow border-t border-slate-300"></div>
+                        <span className="mx-2 text-xs text-slate-400 uppercase">или</span>
+                        <div className="flex-grow border-t border-slate-300"></div>
+                      </div>
 
                       {authMode === "login" ? (
                         <form
@@ -696,11 +728,16 @@ const SmartPriceLanding: React.FC = () => {
                             const email = (form.elements.namedItem("email") as HTMLInputElement).value;
                             const password = (form.elements.namedItem("password") as HTMLInputElement).value;
 
+                            let captcha_token = "dummy_token_dev";
+                            if (executeRecaptcha) {
+                              captcha_token = await executeRecaptcha("login");
+                            }
+
                             try {
                               const response = await fetch("/api/auth/login/", {
                                 method: "POST",
                                 headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({ email, password }),
+                                body: JSON.stringify({ email, password, captcha_token }),
                               });
 
                               if (response.ok) {
@@ -768,11 +805,16 @@ const SmartPriceLanding: React.FC = () => {
                             const email = (form.elements.namedItem("email") as HTMLInputElement).value;
                             const password = (form.elements.namedItem("password") as HTMLInputElement).value;
 
+                            let captcha_token = "dummy_token_dev";
+                            if (executeRecaptcha) {
+                              captcha_token = await executeRecaptcha("register");
+                            }
+
                             try {
                               const response = await fetch("/api/auth/submit/", {
                                 method: "POST",
                                 headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({ email, password }),
+                                body: JSON.stringify({ email, password, captcha_token }),
                               });
 
                               if (response.ok) {

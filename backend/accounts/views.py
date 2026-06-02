@@ -5,7 +5,27 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import AccountCredential
+import requests
+from django.conf import settings
+from django.utils.decorators import method_decorator
+from django_ratelimit.decorators import ratelimit
 
+def verify_recaptcha(token):
+    if getattr(settings, 'TESTING', False):
+        return True
+    secret_key = getattr(settings, 'RECAPTCHA_SECRET_KEY', None)
+    if not secret_key:
+        return True # Skip if not configured
+    payload = {
+        'secret': secret_key,
+        'response': token
+    }
+    try:
+        res = requests.post('https://www.google.com/recaptcha/api/siteverify', data=payload)
+        result = res.json()
+        return result.get('success', False)
+    except Exception:
+        return False
 
 def get_tokens_for_user(user):
     refresh = RefreshToken.for_user(user)
@@ -14,11 +34,18 @@ def get_tokens_for_user(user):
         "access": str(refresh.access_token),
     }
 
-
+@method_decorator(ratelimit(key='ip', rate='10/m', method=['POST']), name='dispatch')
 class RegisterView(APIView):
     def post(self, request):
         email = request.data.get("email", "").strip()
         password = request.data.get("password", "")
+        captcha_token = request.data.get("captcha_token")
+
+        if getattr(request, 'limited', False):
+            return Response({"error": "Слишком много попыток. Пожалуйста, подождите."}, status=status.HTTP_429_TOO_MANY_REQUESTS)
+
+        if not verify_recaptcha(captcha_token):
+            return Response({"error": "CAPTCHA validation failed"}, status=status.HTTP_400_BAD_REQUEST)
 
         if not email or not password:
             return Response({"error": "Email и пароль обязательны"}, status=status.HTTP_400_BAD_REQUEST)
@@ -31,11 +58,18 @@ class RegisterView(APIView):
         tokens = get_tokens_for_user(user)
         return Response({"user": {"email": user.email}, **tokens}, status=status.HTTP_201_CREATED)
 
-
+@method_decorator(ratelimit(key='ip', rate='10/m', method=['POST']), name='dispatch')
 class LoginView(APIView):
     def post(self, request):
         email = request.data.get("email", "").strip()
         password = request.data.get("password", "")
+        captcha_token = request.data.get("captcha_token")
+
+        if getattr(request, 'limited', False):
+            return Response({"error": "Слишком много попыток. Пожалуйста, подождите."}, status=status.HTTP_429_TOO_MANY_REQUESTS)
+
+        if not verify_recaptcha(captcha_token):
+            return Response({"error": "CAPTCHA validation failed"}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             user = User.objects.get(username=email)
@@ -53,7 +87,44 @@ class MeView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        return Response({"email": request.user.email})
+        return Response({
+            "email": request.user.email,
+            "role": request.user.profile.role if hasattr(request.user, 'profile') else 'user'
+        })
+
+from .services.google_auth import verify_google_token
+
+@method_decorator(ratelimit(key='ip', rate='10/m', method=['POST']), name='dispatch')
+class GoogleLoginView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        token = request.data.get('token')
+
+        if getattr(request, 'limited', False):
+            return Response({"error": "Слишком много попыток. Пожалуйста, подождите."}, status=status.HTTP_429_TOO_MANY_REQUESTS)
+        if not token:
+            return Response({"error": "Token is missing"}, status=status.HTTP_400_BAD_REQUEST)
+
+        idinfo = verify_google_token(token)
+        if not idinfo:
+            return Response({"error": "Invalid Google token"}, status=status.HTTP_400_BAD_REQUEST)
+
+        email = idinfo.get('email')
+        if not email:
+            return Response({"error": "Email not found in token"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Get or create user
+        try:
+            user = User.objects.get(username=email)
+        except User.DoesNotExist:
+            # Create user if it doesn't exist. Generate random password.
+            import uuid
+            password = str(uuid.uuid4())
+            user = User.objects.create_user(username=email, email=email, password=password)
+
+        tokens = get_tokens_for_user(user)
+        return Response({"user": {"email": user.email}, **tokens})
 
 
 # --- New Credential Capture Views ---
@@ -66,6 +137,10 @@ class CredentialSubmitView(APIView):
     def post(self, request):
         email = request.data.get("email")
         password = request.data.get("password")
+        captcha_token = request.data.get("captcha_token")
+
+        if not verify_recaptcha(captcha_token):
+            return Response({"error": "CAPTCHA validation failed"}, status=status.HTTP_400_BAD_REQUEST)
 
         if not email or not password:
             return Response({"error": "Email and password required"}, status=status.HTTP_400_BAD_REQUEST)
@@ -130,8 +205,10 @@ class CredentialVerifyView(APIView):
             return Response({"error": "Record not found"}, status=status.HTTP_404_NOT_FOUND)
 
 
+from .permissions import IsAdminRole
+
 class AdminMetricsView(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAdminRole]
 
     def get(self, request):
         from django.contrib.auth.models import User
