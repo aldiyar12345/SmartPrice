@@ -34,6 +34,19 @@ def get_tokens_for_user(user):
         "access": str(refresh.access_token),
     }
 
+from drf_spectacular.utils import extend_schema, OpenApiExample, inline_serializer
+from rest_framework import serializers
+
+@extend_schema(
+    request=inline_serializer(
+        name="RegisterRequest",
+        fields={
+            "email": serializers.EmailField(),
+            "password": serializers.CharField(),
+            "captcha_token": serializers.CharField(required=False),
+        }
+    )
+)
 @method_decorator(ratelimit(key='header:x-forwarded-for', rate='10/m', method=['POST'], block=False), name='dispatch')
 class RegisterView(APIView):
     def post(self, request):
@@ -58,6 +71,16 @@ class RegisterView(APIView):
         tokens = get_tokens_for_user(user)
         return Response({"user": {"email": user.email}, **tokens}, status=status.HTTP_201_CREATED)
 
+@extend_schema(
+    request=inline_serializer(
+        name="LoginRequest",
+        fields={
+            "email": serializers.EmailField(),
+            "password": serializers.CharField(),
+            "captcha_token": serializers.CharField(required=False),
+        }
+    )
+)
 @method_decorator(ratelimit(key='header:x-forwarded-for', rate='10/m', method=['POST'], block=False), name='dispatch')
 class LoginView(APIView):
     def post(self, request):
@@ -94,6 +117,14 @@ class MeView(APIView):
 
 from .services.google_auth import verify_google_token
 
+@extend_schema(
+    request=inline_serializer(
+        name="GoogleLoginRequest",
+        fields={
+            "token": serializers.CharField(),
+        }
+    )
+)
 @method_decorator(ratelimit(key='header:x-forwarded-for', rate='10/m', method=['POST'], block=False), name='dispatch')
 class GoogleLoginView(APIView):
     permission_classes = [AllowAny]
