@@ -83,11 +83,12 @@ jobs:
             echo "SECRET_KEY=django-insecure-prod-$(openssl rand -hex 32)" > backend/.env
             echo "OPENROUTER_API_KEY=$OPENROUTER_API_KEY" >> backend/.env
           fi
-          if command -v docker-compose &> /dev/null; then
-            DC_CMD="docker-compose"
-          else
+          if docker compose version &> /dev/null; then
             DC_CMD="docker compose"
+          else
+            DC_CMD="docker-compose"
           fi
           $DC_CMD -f docker-compose.prod.yml build
           $DC_CMD -f docker-compose.prod.yml run --rm backend python manage.py migrate
+          $DC_CMD -f docker-compose.prod.yml down
           $DC_CMD -f docker-compose.prod.yml up -d

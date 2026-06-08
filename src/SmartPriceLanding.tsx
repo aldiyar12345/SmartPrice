@@ -180,11 +180,17 @@ const SmartPriceLanding: React.FC = () => {
     if (minPrice) params.append("min_price", minPrice.replace(/\s/g, ""));
     if (maxPrice) params.append("max_price", maxPrice.replace(/\s/g, ""));
 
-    fetch(`/api/products/?${params.toString()}`)
-      .then(res => res.json())
+    const queryStr = params.toString();
+    const url = queryStr ? `/api/products/?${queryStr}` : `/api/products/`;
+    fetch(url)
+      .then(async res => {
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(`API error ${res.status}: ${text}`);
+        }
+        return res.json();
+      })
       .then(data => {
-        // API возвращает список товаров. Если нужно ограничить избранным на клиенте:
-        // API может возвращать либо массив, либо объект с полем results (пагинация)
         let list = Array.isArray(data) ? data : (data && Array.isArray(data.results) ? data.results : []);
         if (page === "favorites") {
           list = list.filter((p: Product) => p && favoriteIds.includes(p.id));
