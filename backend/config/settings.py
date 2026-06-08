@@ -154,7 +154,7 @@ sentry_sdk.init(dsn='https://placeholder@o0.ingest.sentry.io/0', traces_sample_r
 import sys
 TESTING = len(sys.argv) > 0 and ('pytest' in sys.argv[0] or 'test' in sys.argv)
 
-if TESTING:
+if TESTING or DEBUG:
     CACHES = {
         "default": {
             "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
