@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     # Local
     "products",
     "accounts",
+    "subscriptions",
 ]
 
 MIDDLEWARE = [
