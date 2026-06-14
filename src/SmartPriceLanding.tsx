@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { Search, Zap, Heart, Menu, X } from "lucide-react";
 import { RecommendationWidget } from "./components/RecommendationWidget";
+import { ProductAdmin } from "./components/ProductAdmin";
 import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 import { GoogleLogin } from "@react-oauth/google";
 type MarketplaceOffer = {
@@ -87,6 +88,11 @@ const SmartPriceLanding: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [favoriteIds, setFavoriteIds] = useState<number[]>([]);
   const [user, setUser] = useState<{ email: string } | null>(null);
+
+  // Subscription states
+  const [subscriptionPlans, setSubscriptionPlans] = useState<any[]>([]);
+  const [currentSubscription, setCurrentSubscription] = useState<any>(null);
+  const [isSubscribing, setIsSubscribing] = useState(false);
 
   // Auth states
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
@@ -207,6 +213,46 @@ const SmartPriceLanding: React.FC = () => {
         .catch(err => console.error("Error fetching metrics:", err));
     }
   }, [page]);
+
+  // Загрузка подписок для профиля
+  React.useEffect(() => {
+    if (page === "profile" && user) {
+      fetch("/api/subscriptions/plans/")
+        .then(res => res.json())
+        .then(data => setSubscriptionPlans(data))
+        .catch(err => console.error(err));
+        
+      fetch("/api/subscriptions/current/")
+        .then(res => {
+           if (res.ok) return res.json();
+           throw new Error("Not authenticated");
+        })
+        .then(data => setCurrentSubscription(data))
+        .catch(err => console.error(err));
+    }
+  }, [page, user]);
+
+  const handleSubscribe = async (planId: number) => {
+    setIsSubscribing(true);
+    try {
+      const res = await fetch("/api/subscriptions/subscribe/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan_id: planId })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setCurrentSubscription(data.subscription);
+        alert("Оплата прошла успешно! Ваш тариф обновлен.");
+      } else {
+        alert("Ошибка при оплате. Возможно, вы не авторизованы.");
+      }
+    } catch(e) {
+      alert("Сбой сети");
+    } finally {
+      setIsSubscribing(false);
+    }
+  };
 
   // читаем сохранённого пользователя из localStorage при загрузке
   React.useEffect(() => {
@@ -986,7 +1032,7 @@ const SmartPriceLanding: React.FC = () => {
                   <>
                     <h2 className="text-xl font-semibold mb-4">Привет, {user.email}</h2>
                     <p className="mb-4 text-sm text-slate-600">
-                      Это ваш профиль. Здесь будет отображаться корзина и история заказов.
+                      Это ваш профиль. Здесь вы можете управлять подпиской и просматривать данные.
                     </p>
                     <button
                       type="button"
@@ -995,8 +1041,41 @@ const SmartPriceLanding: React.FC = () => {
                     >
                       Выйти
                     </button>
-                    <div className="border-t pt-4">
-                      <h3 className="font-medium mb-2">Корзина (пока пусто)</h3>
+                    
+                    {/* Subscriptions Section */}
+                    <div className="border-t border-slate-200 pt-6 mt-2">
+                      <h3 className="text-lg font-semibold mb-4 text-slate-800">Управление подпиской</h3>
+                      
+                      {currentSubscription && (
+                        <div className="mb-6 bg-emerald-50 border border-emerald-200 p-4 rounded-xl flex items-center justify-between">
+                          <div>
+                            <p className="text-sm text-slate-600">Текущий тариф:</p>
+                            <p className="font-bold text-emerald-800 text-lg">{currentSubscription.plan?.name || "Free"}</p>
+                          </div>
+                          {currentSubscription.plan?.name === "Plus" && (
+                            <div className="h-8 w-8 bg-emerald-500 rounded-full flex items-center justify-center text-white font-bold">✓</div>
+                          )}
+                        </div>
+                      )}
+
+                      <div className="space-y-4">
+                        {subscriptionPlans.map(plan => (
+                          <div key={plan.id} className={`border-2 rounded-xl p-4 flex flex-col sm:flex-row gap-4 sm:items-center justify-between transition ${currentSubscription?.plan?.id === plan.id ? 'border-emerald-500 bg-white' : 'border-slate-200 bg-slate-50'}`}>
+                            <div>
+                              <h4 className="font-bold text-slate-900">{plan.name}</h4>
+                              <p className="text-sm text-slate-500">{plan.description}</p>
+                              <p className="font-bold text-emerald-600 mt-1">{parseFloat(plan.price) === 0 ? "Бесплатно" : `${parseFloat(plan.price).toLocaleString("ru-RU")} ₸`}</p>
+                            </div>
+                            <button
+                              onClick={() => handleSubscribe(plan.id)}
+                              disabled={isSubscribing || currentSubscription?.plan?.id === plan.id}
+                              className={`px-4 py-2 rounded-xl font-semibold transition ${currentSubscription?.plan?.id === plan.id ? 'bg-slate-200 text-slate-500 cursor-not-allowed' : 'bg-emerald-600 text-white hover:bg-emerald-700'}`}
+                            >
+                              {currentSubscription?.plan?.id === plan.id ? "Текущий тариф" : isSubscribing ? "Оплата..." : "Выбрать"}
+                            </button>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </>
                 )}
@@ -1062,6 +1141,8 @@ const SmartPriceLanding: React.FC = () => {
                     Загрузка метрик...
                   </div>
                 )}
+
+                <ProductAdmin />
               </section>
             )}
           </div>

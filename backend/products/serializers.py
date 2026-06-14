@@ -19,11 +19,14 @@ class MarketplaceOfferSerializer(serializers.ModelSerializer):
 class ProductSerializer(serializers.ModelSerializer):
     offers = MarketplaceOfferSerializer(many=True, read_only=True)
     category = serializers.StringRelatedField()
+    category_id = serializers.PrimaryKeyRelatedField(
+        queryset=Category.objects.all(), source='category', write_only=True, required=False
+    )
     feature_scores = ProductFeatureScoreSerializer(many=True, read_only=True)
 
     class Meta:
         model = Product
-        fields = ["id", "name", "category", "tags", "rating", "offers", "feature_scores"]
+        fields = ["id", "name", "category", "category_id", "tags", "rating", "offers", "feature_scores"]
 
 
 class CategorySerializer(serializers.ModelSerializer):
