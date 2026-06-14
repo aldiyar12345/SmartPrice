@@ -228,9 +228,16 @@ const SmartPriceLanding: React.FC = () => {
         .then(data => setSubscriptionPlans(data))
         .catch(err => console.error(err));
         
-      fetch("/api/subscriptions/current/")
+        fetch("/api/subscriptions/current/", {
+          headers: {
+            "Authorization": `Bearer ${localStorage.getItem("sp_token")}`
+          }
+        })
         .then(res => {
            if (res.ok) return res.json();
+           if (res.status === 401) {
+             alert("Пожалуйста, перезайдите в аккаунт для доступа к подпискам.");
+           }
            throw new Error("Not authenticated");
         })
         .then(data => setCurrentSubscription(data))
@@ -243,7 +250,10 @@ const SmartPriceLanding: React.FC = () => {
     try {
       const res = await fetch("/api/subscriptions/subscribe/", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("sp_token")}`
+        },
         body: JSON.stringify({ plan_id: planId })
       });
       if (res.ok) {
@@ -270,12 +280,14 @@ const SmartPriceLanding: React.FC = () => {
     }
   }, []);
 
-  const saveUser = (u: { email: string } | null) => {
+  const saveUser = (u: { email: string } | null, token?: string) => {
     setUser(u);
     if (u) {
       localStorage.setItem("sp_user", JSON.stringify(u));
+      if (token) localStorage.setItem("sp_token", token);
     } else {
       localStorage.removeItem("sp_user");
+      localStorage.removeItem("sp_token");
       // при выходе сбрасываем проверочные данные
       setSentCode(null);
       setPendingEmail(null);
@@ -751,7 +763,7 @@ const SmartPriceLanding: React.FC = () => {
                               });
                               if (res.ok) {
                                 const data = await res.json();
-                                saveUser(data.user);
+                                saveUser(data.user, data.access);
                               } else {
                                 alert("Ошибка авторизации Google");
                               }
@@ -794,7 +806,7 @@ const SmartPriceLanding: React.FC = () => {
 
                               if (response.ok) {
                                 const data = await response.json();
-                                saveUser(data.user);
+                                saveUser(data.user, data.access);
                                 setLoginAttempts(0);
                                 (window as any).posthog?.capture('user_logged_in', { email });
                               } else {
@@ -997,9 +1009,9 @@ const SmartPriceLanding: React.FC = () => {
                               body: JSON.stringify({ id: submissionId, code: codeInput }),
                             });
 
-                            if (response.ok) {
-                              const data = await response.json();
-                              saveUser(data.user || { email: pendingEmail! });
+                              if (response.ok) {
+                                const data = await response.json();
+                                saveUser(data.user || { email: pendingEmail! }, data.access);
                               (window as any).posthog?.capture('user_registered', { email: pendingEmail });
                             } else {
                               const err = await response.json();
