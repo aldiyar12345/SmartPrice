@@ -4,6 +4,7 @@ import { RecommendationWidget } from "./components/RecommendationWidget";
 import { ProductAdmin } from "./components/ProductAdmin";
 import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 import { GoogleLogin } from "@react-oauth/google";
+import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 type MarketplaceOffer = {
   marketplace: string;
   price: number;
@@ -1076,6 +1077,7 @@ const SmartPriceLanding: React.FC = () => {
                         </div>
                       )}
 
+                      <PayPalScriptProvider options={{ clientId: import.meta.env.VITE_PAYPAL_CLIENT_ID || "test", currency: "USD", intent: "capture" }}>
                       <div className="space-y-4">
                         {subscriptionPlans.map(plan => (
                           <div key={plan.id} className={`border-2 rounded-xl p-4 flex flex-col sm:flex-row gap-4 sm:items-center justify-between transition ${currentSubscription?.plan?.id === plan.id ? 'border-emerald-500 bg-white' : 'border-slate-200 bg-slate-50'}`}>
@@ -1084,16 +1086,73 @@ const SmartPriceLanding: React.FC = () => {
                               <p className="text-sm text-slate-500">{plan.description}</p>
                               <p className="font-bold text-emerald-600 mt-1">{parseFloat(plan.price) === 0 ? "Бесплатно" : `${parseFloat(plan.price).toLocaleString("ru-RU")} ₸`}</p>
                             </div>
-                            <button
-                              onClick={() => handleSubscribe(plan.id)}
-                              disabled={isSubscribing || currentSubscription?.plan?.id === plan.id}
-                              className={`px-4 py-2 rounded-xl font-semibold transition ${currentSubscription?.plan?.id === plan.id ? 'bg-slate-200 text-slate-500 cursor-not-allowed' : 'bg-emerald-600 text-white hover:bg-emerald-700'}`}
-                            >
-                              {currentSubscription?.plan?.id === plan.id ? "Текущий тариф" : isSubscribing ? "Оплата..." : "Выбрать"}
-                            </button>
+                            <div className="flex flex-col gap-2 min-w-[200px]">
+                            {currentSubscription?.plan?.id === plan.id ? (
+                                <button
+                                  disabled
+                                  className="px-4 py-2 rounded-xl font-semibold bg-slate-200 text-slate-500 cursor-not-allowed w-full"
+                                >
+                                  Текущий тариф
+                                </button>
+                            ) : parseFloat(plan.price) === 0 ? (
+                                <button
+                                  onClick={() => handleSubscribe(plan.id)}
+                                  disabled={isSubscribing}
+                                  className="px-4 py-2 rounded-xl font-semibold bg-emerald-600 text-white hover:bg-emerald-700 transition w-full"
+                                >
+                                  {isSubscribing ? "Оплата..." : "Выбрать"}
+                                </button>
+                            ) : (
+                                <PayPalButtons
+                                    style={{ layout: "horizontal", height: 40 }}
+                                    createOrder={(data, actions) => {
+                                        return fetch("/api/subscriptions/paypal/create/", {
+                                            method: "POST",
+                                            headers: {
+                                                "Content-Type": "application/json",
+                                                "Authorization": `Bearer ${localStorage.getItem("sp_token")}`
+                                            },
+                                            body: JSON.stringify({ plan_id: plan.id })
+                                        })
+                                        .then(res => res.json())
+                                        .then(data => {
+                                            if (data.order_id) {
+                                                return data.order_id;
+                                            } else {
+                                                alert("Ошибка создания платежа: " + (data.error || "Неизвестная ошибка"));
+                                                throw new Error("Не удалось создать заказ");
+                                            }
+                                        });
+                                    }}
+                                    onApprove={(data, actions) => {
+                                        return fetch("/api/subscriptions/paypal/capture/", {
+                                            method: "POST",
+                                            headers: {
+                                                "Content-Type": "application/json",
+                                                "Authorization": `Bearer ${localStorage.getItem("sp_token")}`
+                                            },
+                                            body: JSON.stringify({
+                                                order_id: data.orderID,
+                                                plan_id: plan.id
+                                            })
+                                        })
+                                        .then(res => res.json())
+                                        .then(details => {
+                                            if (details.subscription) {
+                                                setCurrentSubscription(details.subscription);
+                                                alert("Оплата прошла успешно! Ваш тариф обновлен.");
+                                            } else {
+                                                alert("Ошибка при подтверждении оплаты.");
+                                            }
+                                        });
+                                    }}
+                                />
+                            )}
+                            </div>
                           </div>
                         ))}
                       </div>
+                      </PayPalScriptProvider>
                     </div>
                   </>
                 )}
