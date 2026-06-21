@@ -139,6 +139,19 @@ const SmartPriceLanding: React.FC = () => {
   ]);
   const [chatInput, setChatInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [newRecommendationUi, setNewRecommendationUi] = useState(false);
+
+  React.useEffect(() => {
+    (window as any).posthog?.capture('page_viewed', { page });
+  }, [page]);
+
+  React.useEffect(() => {
+    (window as any).posthog?.onFeatureFlags?.(() => {
+      if ((window as any).posthog?.isFeatureEnabled('new_recommendation_ui')) {
+        setNewRecommendationUi(true);
+      }
+    });
+  }, []);
 
   const handleSendMessage = async () => {
     if (!chatInput.trim() || isTyping) return;
@@ -155,6 +168,7 @@ const SmartPriceLanding: React.FC = () => {
       });
       const data = await resp.json();
       setChatMessages(prev => [...prev, { id: Date.now() + 1, role: "ai", content: data.response }]);
+      (window as any).posthog?.capture('chat_message_sent', { message_length: userMsg.length });
     } catch (err) {
       setChatMessages(prev => [...prev, { id: Date.now() + 1, role: "ai", content: "Простите, произошла ошибка подключения." }]);
     } finally {
@@ -209,6 +223,7 @@ const SmartPriceLanding: React.FC = () => {
         console.error("Error fetching products:", err);
         setLoading(false);
       });
+      (window as any).posthog?.capture('filter_applied', { search, category, minPrice, maxPrice });
   }, [search, category, minPrice, maxPrice, page, favoriteIds]);
 
   // Загрузка метрик для админ-панели
@@ -247,6 +262,7 @@ const SmartPriceLanding: React.FC = () => {
   }, [page, user]);
 
   const handleSubscribe = async (planId: number) => {
+    (window as any).posthog?.capture('checkout_started', { plan_id: planId });
     setIsSubscribing(true);
     try {
       const res = await fetch("/api/subscriptions/subscribe/", {
@@ -260,6 +276,13 @@ const SmartPriceLanding: React.FC = () => {
       if (res.ok) {
         const data = await res.json();
         setCurrentSubscription(data.subscription);
+        (window as any).posthog?.capture('purchase_completed', { plan_id: planId });
+        if (data.subscription?.plan?.name) {
+          (window as any).posthog?.people.set({ plan: data.subscription.plan.name });
+          if (typeof (window as any).gtag === 'function') {
+            (window as any).gtag('event', 'purchase', { value: 0, currency: 'KZT', items: [{ item_id: planId, item_name: data.subscription.plan.name }] });
+          }
+        }
         alert("Оплата прошла успешно! Ваш тариф обновлен.");
       } else {
         alert("Ошибка при оплате. Возможно, вы не авторизованы.");
@@ -286,6 +309,7 @@ const SmartPriceLanding: React.FC = () => {
     if (u) {
       localStorage.setItem("sp_user", JSON.stringify(u));
       if (token) localStorage.setItem("sp_token", token);
+      (window as any).posthog?.identify(u.email, { email: u.email, name: u.email });
     } else {
       localStorage.removeItem("sp_user");
       localStorage.removeItem("sp_token");
@@ -302,9 +326,11 @@ const SmartPriceLanding: React.FC = () => {
   };
 
   const toggleFavorite = (id: number) => {
-    setFavoriteIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
+    setFavoriteIds((prev) => {
+      const isFavorited = !prev.includes(id);
+      (window as any).posthog?.capture(isFavorited ? 'product_favorited' : 'product_unfavorited', { product_id: id });
+      return isFavorited ? [...prev, id] : prev.filter((x) => x !== id);
+    });
   };
 
   // helper that computes filtered products based on current filters
@@ -658,10 +684,20 @@ const SmartPriceLanding: React.FC = () => {
                   </p>
                 </section>
                 
-                <RecommendationWidget 
-                  onRecommend={(prods) => setRecommendedProducts(prods)}
-                  onClear={() => setRecommendedProducts(null)}
-                />
+                {newRecommendationUi ? (
+                  <div className="bg-emerald-50 border-2 border-dashed border-emerald-400 p-4 rounded-3xl shadow-sm mb-6">
+                    <h3 className="text-emerald-800 font-bold mb-2 flex items-center gap-2"><Zap className="w-5 h-5"/> Новый умный подбор</h3>
+                    <RecommendationWidget 
+                      onRecommend={(prods) => setRecommendedProducts(prods)}
+                      onClear={() => setRecommendedProducts(null)}
+                    />
+                  </div>
+                ) : (
+                  <RecommendationWidget 
+                    onRecommend={(prods) => setRecommendedProducts(prods)}
+                    onClear={() => setRecommendedProducts(null)}
+                  />
+                )}
 
                 {!recommendedProducts && (
                   <>
@@ -684,7 +720,7 @@ const SmartPriceLanding: React.FC = () => {
                             <button
                               key={c}
                               type="button"
-                              onClick={() => setCategory(c)}
+                              onClick={() => { setCategory(c); (window as any).posthog?.capture('category_selected', { category: c }); }}
                               className={`w-full text-left px-4 py-2 rounded-2xl border text-slate-900 transition ${isActive
                                 ? "bg-[var(--soft-lime-hover)] border-[#A8D89F]"
                                 : "bg-[var(--soft-lime)] border-[#C0E8A1] hover:bg-[var(--soft-lime-hover)]/80"
@@ -741,13 +777,13 @@ const SmartPriceLanding: React.FC = () => {
                       <div className="flex bg-slate-100 p-1 rounded-xl mb-6">
                         <button 
                           className={`flex-1 py-2 text-sm font-semibold rounded-lg transition ${authMode === "login" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
-                          onClick={() => setAuthMode("login")}
+                          onClick={() => { setAuthMode("login"); (window as any).posthog?.capture('auth_started', { mode: 'login' }); }}
                         >
                           Вход
                         </button>
                         <button 
                           className={`flex-1 py-2 text-sm font-semibold rounded-lg transition ${authMode === "register" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
-                          onClick={() => setAuthMode("register")}
+                          onClick={() => { setAuthMode("register"); (window as any).posthog?.capture('auth_started', { mode: 'register' }); }}
                         >
                           Регистрация
                         </button>
@@ -1013,7 +1049,10 @@ const SmartPriceLanding: React.FC = () => {
                               if (response.ok) {
                                 const data = await response.json();
                                 saveUser(data.user || { email: pendingEmail! }, data.access);
-                              (window as any).posthog?.capture('user_registered', { email: pendingEmail });
+                                (window as any).posthog?.capture('user_registered', { email: pendingEmail });
+                                if (typeof (window as any).gtag === 'function') {
+                                  (window as any).gtag('event', 'sign_up', { method: 'email' });
+                                }
                             } else {
                               const err = await response.json();
                               const newAttempts = codeAttempts + 1;
@@ -1106,6 +1145,7 @@ const SmartPriceLanding: React.FC = () => {
                                 <PayPalButtons
                                     style={{ layout: "horizontal", height: 40 }}
                                     createOrder={(data, actions) => {
+                                        (window as any).posthog?.capture('checkout_started', { plan_id: plan.id });
                                         return fetch("/api/subscriptions/paypal/create/", {
                                             method: "POST",
                                             headers: {
@@ -1140,6 +1180,13 @@ const SmartPriceLanding: React.FC = () => {
                                         .then(details => {
                                             if (details.subscription) {
                                                 setCurrentSubscription(details.subscription);
+                                                (window as any).posthog?.capture('purchase_completed', { plan_id: plan.id });
+                                                if (details.subscription?.plan?.name) {
+                                                  (window as any).posthog?.people.set({ plan: details.subscription.plan.name });
+                                                  if (typeof (window as any).gtag === 'function') {
+                                                    (window as any).gtag('event', 'purchase', { value: parseFloat(plan.price), currency: 'KZT', items: [{ item_id: plan.id, item_name: details.subscription.plan.name }] });
+                                                  }
+                                                }
                                                 alert("Оплата прошла успешно! Ваш тариф обновлен.");
                                             } else {
                                                 alert("Ошибка при подтверждении оплаты.");
