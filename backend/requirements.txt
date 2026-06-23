@@ -13,3 +13,5 @@ celery
 redis
 django-ratelimit
 google-auth
+django-prometheus
+python-json-logger

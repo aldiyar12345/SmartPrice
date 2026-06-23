@@ -230,17 +230,16 @@ class ProductManageViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     # allow any for testing/demo or IsAdminUser
-    # Since we want to simplify for the frontend demo, we can use IsAuthenticated and check email, or just AllowAny for the hackathon/demo context, but let's stick to a custom permission or AllowAny for easy testing from the UI if IsAdminUser is tricky with Google Auth.
-    permission_classes = [] 
+    permission_classes = [IsAdminUser] 
 
 class CategoryManageViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = [] 
+    permission_classes = [IsAdminUser] 
 
 class MarketplaceOfferManageViewSet(viewsets.ModelViewSet):
     queryset = MarketplaceOffer.objects.all()
     serializer_class = MarketplaceOfferSerializer
-    permission_classes = [] 
+    permission_classes = [IsAdminUser] 
 
 
