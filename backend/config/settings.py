@@ -16,7 +16,7 @@ ALLOWED_HOSTS = [
     host.strip()
     for host in os.getenv(
         "ALLOWED_HOSTS",
-        "localhost,127.0.0.1,165.22.253.31,smrtprc.me,www.smrtprc.me",
+        "localhost,127.0.0.1,165.22.253.31,smrtprc.me,www.smrtprc.me,backend",
     ).split(",")
     if host.strip()
 ]
